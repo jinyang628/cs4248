@@ -16,7 +16,13 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### Update dependencies
+### Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Update dependencies (if new packages have been installed)
 
 ```bash
 pip freeze > requirements.txt
