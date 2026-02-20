@@ -30,4 +30,4 @@ pip freeze > requirements.txt
 
 ## Staying up to date on Google Collab
 
-Access the `main` version of the code via the following [link](https://github.com/jinyang628/cs4248/blob/main/CS4248.ipynb)
+Access the `main` version of the code via the following [link](https://colab.research.google.com/github/jinyang628/cs4248/blob/main/CS4248.ipynb)
