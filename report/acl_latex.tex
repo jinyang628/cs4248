@@ -99,13 +99,9 @@ The following pre-processing steps are then added to the Naive Bayes pipeline ex
 The following pre-processing steps are removed from the Naive Bayes pipeline as they did not improve the performance of the model:
 
 \begin{enumerate}
-    % TODO: Jin Yang to write this properly
-    \item \textbf{Removal of stopwords.} Stopwords are removed from the text as they are commonly used in informal social-media text and do not carry much sentiment signal. While this discards potential signals towards rage or excitement which may be important for sentiment classification, our experiments indicate that the signal was largely inconsistent so the generalization gain outweighted the potential information loss. 
-    \item \textbf{Lemmatization.} Lemmatization is the process of reducing words to their base form, e.g., ``running'' to ``run''. While this may help reduce the vocabulary space, our experiments indicate that the signal was largely inconsistent so the generalization gain outweighted the potential information loss. 
+    \item \textbf{Removal of stopwords.} The performance of the model worsened after experimenting with both the nltk stopword list and a custom-created list that preserves words which signal sentiment. This may be because stopwords can carry implicit structural and contextual cues that the model relies on, and their removal disrupts the natural flow of text, leading to a loss of information that is difficult to recover.
+    \item \textbf{Lemmatization.} Lemmatization was empirically observed to have worsened performance despite the potential benefits of reducing the vocabulary space. A likely reason is that morphological variations (e.g., verb tenses, plural forms) can themselves carry sentiment-relevant information --- for instance, \textit{loved} versus \textit{love} --- which is erased when words are reduced to their base form.
 \end{enumerate}
-
-
-This preprocessing design balances simplicity and effectiveness: normalization steps reduce lexical variation, while negation tagging preserves sentiment-bearing structure that standard bag-of-words representations often miss.
 
 %%%%%
 
