@@ -1,1 +1,5 @@
 .venv
+acl_latex.aux
+acl_latex.log
+acl_latex.out
+missfont.log
