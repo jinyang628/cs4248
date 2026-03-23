@@ -80,16 +80,30 @@ Through this comparison, we aim to identify the extent to which preprocessing ca
 
 \section{Corpus Analysis \& Method}
 
-We apply a lightweight but targeted preprocessing pipeline to improve feature consistency for sentiment classification while preserving key polarity cues. The pipeline consists of the following steps:
+We apply a lightweight preprocessing pipeline to narrow down the feature space for both the Roberta and Naive Bayes pipeline. This pipeline is kept intentionally minimal so that we can observe the performance of Roberta without the influence of extensive preprocessing.
 
 \begin{enumerate}
-    \item \textbf{Removal of uninformative columns.} We removed the following columns from our analysis: ``Population -2020'', ``Land Area (Km²)'', ``Density (P/Km²)'', ``Country'', ``Age of User'', ``Time of Tweet'', ``selected\_text'' as they do not contribute meaningfully to improving the performance of sentiment classification. Note that the value present in ``selected\_text'' is a subset of the value present in ``text''. While the process of deriving ``selected\_text'' is not explicitly documented in the dataset, our assumption is that it is the most relevant part of the tweet that led to the classification result. Regardless, this column is not present in the test set and we chose to exclude it from our training.
-    \item \textbf{Removal of rows with critical missing values.} We removed rows with critical missing values in the ``text'' and ``sentiment'' columns.
-    \item \textbf{Lowercasing.} All tokens are converted to lowercase to reduce vocabulary sparsity (e.g., ``Good'' and ``good'' are mapped to the same feature).
-    \item \textbf{Removal of numbers.} Numeric tokens are removed because they rarely carry stable sentiment signals in our corpus and can introduce noise into bag-of-words features.
-    \item \textbf{Negation tagging.} We explicitly model local negation scope by prefixing the next $N$ tokens with \texttt{NOT\_} after a negation trigger (e.g., \textit{not good at all} $\rightarrow$ \textit{NOT\_good NOT\_at NOT\_all} for $N{=}3$). This helps the model distinguish polarity reversals such as ``good'' versus ``not good''.
-    \item \textbf{Removal of special characters and punctuation.} Non-alphabetic symbols and punctuation marks are removed to reduce tokenization noise from informal social-media text.
+    \item \textbf{Removal of uninformative columns.} The following columns are ignored in the training and prediction stages: ``Population -2020'', ``Land Area (Km²)'', ``Density (P/Km²)'', ``Country'', ``Age of User'', ``Time of Tweet'', ``selected\_text'' as they do not contribute meaningfully to improving the performance of sentiment classification. Note that the value present in ``selected\_text'' is a subset of the value present in ``text''. While the process of deriving ``selected\_text'' is not explicitly documented in the dataset, the assumption is that it represents the most relevant part of the tweet that led to the classification result. Regardless, this column is not present in the test set and hence excluded from training.
+    \item \textbf{Removal of rows with critical missing values.} Rows with missing values in the ``text'' and ``sentiment'' columns are removed. It was manually observed that all the testing rows that are dropped are merely empty rows caused by formatting issues.
 \end{enumerate}
+
+The following pre-processing steps are then added to the Naive Bayes pipeline exclusively, which empirically improved feature consistency for sentiment classification while preserving key polarity cues:
+
+\begin{enumerate}
+    \item \textbf{Lowercasing.} All tokens are converted to lowercase to reduce vocabulary sparsity by allowing a single set of weights per word to be learned (e.g., ``Good'' and ``good'' are mapped to the same feature). While this discards potential signals from ALL CAPS that signals against a neutral classification, our experiments indicate that the signal was largely inconsistent so the generalization gain outweighted the potential information loss. 
+    \item \textbf{Removal of numbers.} Numeric tokens are removed because they rarely carry stable sentiment signals in the corpus and can introduce noise into bag-of-words features.
+    \item \textbf{Negation tagging.} We explicitly model local negation scope by prefixing the next $N$ tokens with \texttt{NOT\_} after a negation trigger (e.g., \textit{not good at all} $\rightarrow$ \textit{NOT\_good NOT\_at NOT\_all} for $N{=}3$). This helps the model distinguish polarity reversals such as ``good'' versus ``not good''.
+    \item \textbf{Removal of special characters and punctuation.} Non-alphabetic symbols and punctuation marks are removed to reduce noise from informal social-media text. While this discards potential signals towards rage or excitement which may be important for sentiment classification, our experiments indicate that the signal was largely inconsistent so the generalization gain outweighted the potential information loss. 
+\end{enumerate}
+
+The following pre-processing steps are removed from the Naive Bayes pipeline as they did not improve the performance of the model:
+
+\begin{enumerate}
+    % TODO: Jin Yang to write this properly
+    \item \textbf{Removal of stopwords.} Stopwords are removed from the text as they are commonly used in informal social-media text and do not carry much sentiment signal. While this discards potential signals towards rage or excitement which may be important for sentiment classification, our experiments indicate that the signal was largely inconsistent so the generalization gain outweighted the potential information loss. 
+    \item \textbf{Lemmatization.} Lemmatization is the process of reducing words to their base form, e.g., ``running'' to ``run''. While this may help reduce the vocabulary space, our experiments indicate that the signal was largely inconsistent so the generalization gain outweighted the potential information loss. 
+\end{enumerate}
+
 
 This preprocessing design balances simplicity and effectiveness: normalization steps reduce lexical variation, while negation tagging preserves sentiment-bearing structure that standard bag-of-words representations often miss.
 
