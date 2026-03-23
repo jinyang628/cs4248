@@ -76,6 +76,26 @@ In this project, we investigate the strengths and limitations of different appro
 
 Through this comparison, we aim to identify the extent to which preprocessing can compensate for the structural limitations of Naive Bayes, and to highlight the types of linguistic patterns that remain difficult for such models to capture.
 
+%%%%%
+
+\section{Corpus Analysis \& Method}
+
+We apply a lightweight but targeted preprocessing pipeline to improve feature consistency for sentiment classification while preserving key polarity cues. The pipeline consists of the following steps:
+
+\begin{enumerate}
+    \item \textbf{Removal of uninformative columns.} We removed the following columns from our analysis: ``Population -2020'', ``Land Area (Km²)'', ``Density (P/Km²)'', ``Country'', ``Age of User'', ``Time of Tweet'', ``selected\_text'' as they do not contribute meaningfully to improving the performance of sentiment classification. Note that the value present in ``selected\_text'' is a subset of the value present in ``text''. While the process of deriving ``selected\_text'' is not explicitly documented in the dataset, our assumption is that it is the most relevant part of the tweet that led to the classification result. Regardless, this column is not present in the test set and we chose to exclude it from our training.
+    \item \textbf{Removal of rows with critical missing values.} We removed rows with critical missing values in the ``text'' and ``sentiment'' columns.
+    \item \textbf{Lowercasing.} All tokens are converted to lowercase to reduce vocabulary sparsity (e.g., ``Good'' and ``good'' are mapped to the same feature).
+    \item \textbf{Removal of numbers.} Numeric tokens are removed because they rarely carry stable sentiment signals in our corpus and can introduce noise into bag-of-words features.
+    \item \textbf{Negation tagging.} We explicitly model local negation scope by prefixing the next $N$ tokens with \texttt{NOT\_} after a negation trigger (e.g., \textit{not good at all} $\rightarrow$ \textit{NOT\_good NOT\_at NOT\_all} for $N{=}3$). This helps the model distinguish polarity reversals such as ``good'' versus ``not good''.
+    \item \textbf{Removal of special characters and punctuation.} Non-alphabetic symbols and punctuation marks are removed to reduce tokenization noise from informal social-media text.
+\end{enumerate}
+
+This preprocessing design balances simplicity and effectiveness: normalization steps reduce lexical variation, while negation tagging preserves sentiment-bearing structure that standard bag-of-words representations often miss.
+
+%%%%%
+
+
 \section{Report Best Practices}
 \label{s:best}
 
