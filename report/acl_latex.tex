@@ -94,7 +94,6 @@ The following pre-processing steps are then added to the Naive Bayes pipeline ex
     \item \textbf{Removal of numbers.} Numeric tokens are removed because they rarely carry stable sentiment signals in the corpus and can introduce noise into bag-of-words features.
     \item \textbf{Negation tagging.} We explicitly model local negation scope by prefixing the next $N$ tokens with \texttt{NOT\_} after a negation trigger (e.g., \textit{not good at all} $\rightarrow$ \textit{NOT\_good NOT\_at NOT\_all} for $N{=}3$). This helps the model distinguish polarity reversals such as ``good'' versus ``not good''.
     \item \textbf{Removal of special characters and punctuation.} Non-alphabetic symbols and punctuation marks are removed to reduce noise from informal social-media text. While this discards potential signals towards rage or excitement which may be important for sentiment classification, our experiments indicate that the generalization gain outweighted the potential information loss. 
-    \item \textbf{Removal of expressive lengthening.} Expressive lengthening such as ``soooo'' is replaced with ``soo'' to reduce the vocabulary space. While this discards potential signals towards emphasis or excitement which may be important for sentiment classification, our experiments indicate that the generalization gain outweighted the potential information loss.
 \end{enumerate}
 
 The following pre-processing steps are removed from the Naive Bayes pipeline as they did not improve the performance of the model:
@@ -102,6 +101,7 @@ The following pre-processing steps are removed from the Naive Bayes pipeline as 
 \begin{enumerate}
     \item \textbf{Removal of stopwords.} The performance of the model worsened after experimenting with both the nltk stopword list and a custom-created list that preserves words which signal sentiment. This may be because stopwords can carry implicit structural and contextual cues that the model relies on, and their removal disrupts the natural flow of text, leading to a loss of information that is difficult to recover.
     \item \textbf{Lemmatization.} Lemmatization was empirically observed to have worsened performance despite the potential benefits of reducing the vocabulary space. A likely reason is that morphological variations (e.g., verb tenses, plural forms) can themselves carry sentiment-relevant information --- for instance, \textit{loved} versus \textit{love} --- which is erased when words are reduced to their base form.
+    \item \textbf{Removal of expressive lengthening.} Expressive lengthening such as ``soooo'' could be replaced with ``soo'' to reduce the vocabulary space. The logic involves replacing repeated characters of more than length 2 with only 2 characters. Our experiments indicate that performance gains caused by a smaller vocabulary space did not outweigh the loss of sentiment information caused by the removal of expressive lengthening, indicating that the expressive lengthenings are meaningful indicators of sentiment.
 \end{enumerate}
 
 %%%%%
