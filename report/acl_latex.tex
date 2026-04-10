@@ -124,6 +124,59 @@ The best-performing configuration used a CountVectorizer with max features = 650
 
 Unlike standard multiclass classification, our notebook maps sentiment labels to ordinal scores {-1, 0, 1} and also experiments with threshold calibration for converting prediction scores back to discrete classes. This was done to improve macro-F1, especially for the neutral class, which often lies between clearly positive and clearly negative examples.
 
+\subsection{Naive Bayes results}
+
+Using default sentiment thresholds of -0.33 and 0.33, the Naive Bayes model achieved an overall accuracy of 0.69 and a macro-F1 score of 0.69 on the test set. Class-wise results showed that positive tweets were the easiest to classify, while neutral tweets were more difficult.
+
+We additionally performed threshold calibration on the predicted sentiment scores to improve macro-F1. By tuning decision boundaries for negative and positive classes, we observed a small improvement in macro-F1, suggesting that the neutral class benefits from more flexible decision thresholds. This calibration slightly improved the balance across classes, particularly by increasing neutral-class recall, although overall accuracy remained around 0.69.
+
+These results suggest that even a relatively simple bag-of-words model can perform competitively when supported by suitable preprocessing and decision-threshold tuning.
+
+\section{RoBERTa method}
+
+To compare against a pretrained transformer, we fine-tuned DistilRoBERTa on the sentiment dataset. Instead of directly treating the task as a 3-way classification problem, the notebook formulates it as regression over sentiment scores, where negative, neutral, and positive are mapped to -1, 0, and 1 respectively. The regression outputs are then converted back into class labels using thresholding.
+
+The model used a maximum sequence length of 64, batch size of 32, learning rate of 2e-5, weight decay of 0.01, and one training epoch. This design keeps training lightweight while still leveraging contextual representations learned from large-scale pretraining.
+
+Compared with Naive Bayes, RoBERTa is expected to better capture contextual sentiment cues, especially cases involving negation, composition, and longer dependencies that are difficult to represent with bag-of-words features alone.
+
+
+\section{LSTM method}
+
+We also implemented an LSTM-based classifier as an intermediate neural baseline between Naive Bayes and RoBERTa. The LSTM pipeline uses a custom vocabulary with minimum frequency filtering, padded mini-batches, trainable embeddings, and a bidirectional LSTM encoder followed by dropout and a linear classification layer.
+
+The preprocessing for the LSTM includes lowercasing, lemmatization, URL removal, translation of hashtags and emoticons, and retention of stopwords. This setup is intended to preserve sentiment-bearing function words while reducing noise from informal tweet formatting.
+
+Hyperparameter tuning was performed over embedding dimension, hidden dimension, dropout rate, batch size, and bidirectionality. The best hyperparameter setting recorded in the notebook was 
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\hline
+\textbf{Hyperparameter} & \textbf{Value} \\
+\hline
+Embedding dimension & 100 \\
+Hidden dimension & 256 \\
+Dropout & 0.4 \\
+Batch size & 32 \\
+Number of layers & 1 \\
+Bidirectional & True \\
+\hline
+\end{tabular}
+\caption{Best-performing LSTM hyperparameters}
+\end{table}
+
+\section{Discussion}
+
+Our experiments suggest that preprocessing matters substantially for tweet sentiment classification, especially for simpler models. Handling negation, preserving sentiment-bearing tokens, and calibrating thresholds allowed Naive Bayes to reach a reasonably strong macro-F1 despite its simplicity. This shows that careful text normalization and representation can partially compensate for the limitations of bag-of-words models.
+
+At the same time, the architecture choices in the notebook reflect the expectation that neural models should perform better when contextual understanding is required. RoBERTa, in particular, should be more robust to contextual polarity shifts and compositional meaning. LSTM provides a useful middle ground, offering sequential modelling without the full computational cost of a transformer.
+
+One limitation of the present notebook is that the saved outputs are incomplete for the neural models. This makes it difficult to perform a full empirical comparison directly from the notebook snapshot alone. In the final report, the analysis should therefore distinguish clearly between implemented methods and fully verified numerical results.
+
+\section{Conclusion}
+
+In this project, we investigated tweet sentiment classification using Naive Bayes, RoBERTa, and LSTM models. Exploratory analysis showed that textual content was far more informative than the available metadata, leading us to focus on tweet-level preprocessing and modelling. Among the saved results, Naive Bayes achieved about 0.69 accuracy and 0.70 macro-F1 after threshold calibration, demonstrating that a simple model can remain competitive with strong preprocessing. Future work should complete the evaluation of the neural models and compare their gains against their additional computational cost.
 
 %%%%%
 
