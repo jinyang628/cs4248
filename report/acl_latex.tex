@@ -49,7 +49,7 @@
 %         Author 2 \\ Address line \\ ... \\ Address line \And
 %         Author 3 \\ Address line \\ ... \\ Address line}
 
-\author{A0251997L, A02345678Y, A0252829W \\
+\author{A0251997L, A02345678Y, A0252829W, A0252459X \\
   Group 28 \\
   Mentored by Esther Gan \\
   \texttt{\{e0968397,e0958047,e0957771,e0957585,e0958417\}@u.nus.edu}}
@@ -114,10 +114,27 @@ Exploratory data analysis showed that the sentiment labels were relatively balan
 While the dataset contains additional metadata such as country, age group, and time of tweet, our modelling pipeline focuses exclusively on textual features. Therefore, we restrict our models to operate on tweet text.
 
 \section{Naive Bayes method}
+For the classical baseline, we trained a Multinomial Naive Bayes classifier. Text was vectorized using a count-based representation. We performed hyperparameter grid search using sklearn's RandomizedSearchCV and GridSearchCV functions over the vectorizer and model settings, including the n-gram range, minimum document frequency, vocabulary size, and smoothing parameter alpha. Starting from a wide range for each feature, We did randomized grid search a few times, and slowly zoomed in to test more precise values.
 
-For the classical baseline, we trained a Multinomial Naive Bayes classifier. Text was vectorized using a count-based representation. We performed hyperparameter search over the vectorizer and model settings, including the n-gram range, minimum document frequency, vocabulary size, and smoothing parameter alpha.
+The best-performing configuration and the test ranges used are presented in Table 1.
 
-The best-performing configuration used a CountVectorizer with max features = 6500, ngram range = (1, 2), min df = 1, and a Multinomial Naive Bayes classifier with alpha = 1.0. This indicates that unigram and bigram features were sufficient, while more complex n-gram ranges did not yield better cross-validation performance in the saved notebook.
+The optimal n-gram range indicates that unigram and bigram features were sufficient, while more complex n-gram ranges did not yield better cross-validation performance in the saved notebook.
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{lcr}
+\hline
+\textbf{Hyperparameter} & \textbf{Value} & \textbf{Test Range} \\
+\hline
+Max Features & 6500 & 1000-30000 \\
+N-gram Range & (1,2) & (x,y); $x,y \in $ [1,5] \\
+Minimum df & 1 & 1-5 \\
+Alpha & 1.0 & 0.1-1.0\\
+Vectorizer & Count & Count, TF-IDF \\
+\hline
+\end{tabular}
+\caption{Best-performing Naive Bayes hyperparameters}
+\end{table}
 
 Unlike standard multiclass classification, our notebook maps sentiment labels to ordinal scores {-1, 0, 1} and also experiments with threshold calibration for converting prediction scores back to discrete classes. This was done to improve macro-F1, especially for the neutral class, which often lies between clearly positive and clearly negative examples.
 
@@ -126,6 +143,8 @@ Unlike standard multiclass classification, our notebook maps sentiment labels to
 Using default sentiment thresholds of -0.33 and 0.33, the Naive Bayes model achieved an overall accuracy of 0.69 and a macro-F1 score of 0.69 on the test set. Class-wise results showed that positive tweets were the easiest to classify, while neutral tweets were more difficult.
 
 We additionally performed threshold calibration on the predicted sentiment scores to improve macro-F1. By tuning decision boundaries for negative and positive classes, we observed a small improvement in macro-F1, suggesting that the neutral class benefits from more flexible decision thresholds. This calibration slightly improved the balance across classes, particularly by increasing neutral-class recall, although overall accuracy remained around 0.69.
+
+Hyperparameter tuning further improved the accuracy from about 0.69 to 0.71, suggesting that the model is already highly optimised, and that the limitations come from the model architecture or the dataset.
 
 These results suggest that even a relatively simple bag-of-words model can perform competitively when supported by suitable preprocessing and decision-threshold tuning.
 
