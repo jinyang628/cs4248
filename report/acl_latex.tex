@@ -85,6 +85,38 @@ Naive Bayes remain beneficial under a sequential architecture, supported with be
 training Naive Bayes and RoBERTa on the same dataset to inspect instances where RoBERTA succeeded while Naive Bayes failed.
 %%%%%
 
+\section{Related Work / Background}
+
+\subsection{State of the Art Models}
+
+In the industry, there have been many models used to do sentiment analysis on tweets. Most of the top performing models use LSTM-type models, according to nlpprogress.com\footnote{The website used: \url{https://nlpprogress.com/english/sentiment_analysis.html}.}. 
+
+As shown in this website, the best sentiment analysis model (up to 2019)\footnote{The model used: \url{https://arxiv.org/pdf/1906.08237}.} had an accuracy of 96\%, using a self-attention setup. The only preprocessing done was just encoding relative positioning in the vector representation.
+
+However, as transformers are more computationally expensive and harder to interpret, we wanted to see if the standard Naive Bayes with preprocessing was enough to rival the performance of the best models.
+
+\subsection{Evaluating the Effectiveness of Text Pre-Processing in Sentiment Analysis (2022) by Palonimo et al.}
+
+However, significant research has also been done in the industry on improving preprocessing methods.
+
+In this paper\footnote{The paper by Palonimo et al.: \url{https://www.mdpi.com/2076-3417/12/17/8765}.} by Palonimo et al, where they showcased a Naive Bayes Classifer used on tweets, and tested various preprocessing pipelines to test the effectiveness of diifferent preprocessing pipelines. They have also provided a table of their accuracy scores they obtained with different preprocessing pipelines, as well as with no preprocessing, which allows for a good benchmark for our models.
+
+In both cases, it was shown that Naive Bayes managed to obtain a very high accuracy, with as high as 91\% on gold standard datasets, and 86\% on the whole dataset overall. This highlights its potential to be a decent classifier despite its simplicity. 91\% is also very close to the self-attention model's accuracy, at 96\%, suggesting that it might be able to come close to the accuracy of more sophisticated models.
+
+However, the tweets they used were from the political domain, about the Grand Old Party (GOP) held among the candidates of the Republican Party for the 2016 US Presidential Election. Naturally, this makes the tweets much more polarizing, making it easier for those models to achieve better scores.
+
+With our much more neutral and nuanced dataset from Kaggle, our goal is to see if Naive Bayes could still hold up against a dataset with not so polarizing comments.
+
+\subsection{Implementation of Naive Bayes Algorithm on Sentiment Analysis Application (2021) by Martiti et al.}
+
+In this paper\footnote{The paper by Martiti et al.: \url{https://www.atlantis-press.com/article/125963764.pdf}.}, there is yet another sentiment analysis classifier made with simple Naive Bayes, but this time done on Grab Twitter comments. This is done with TF-IDF vectors instead of Count vectors. As shown, they managed to achieve an impressive 99.623\% accuracy on their Naive Bayes classifier, which highlights the massive potential in just using Naive Bayes.
+
+However, as the dataset is different (Tweet comments about Grab instead of general tweets), which are usually more polarizing by nature, it might not reflect the actual potential of just using Naive Bayes on more neutral tweets. Furthermore, as our tweets cover a much wider range of context, rather than just one (Grab), it will likely be more difficult to just use Naive Bayes on the tweet dataset. As such, we want to try to push Naive Bayes as far as we can with our dataset.
+
+\subsection{Summary Comments on Industry Projects}
+
+From these industry projects, we thus have hope that we can simply push Naive Bayes to its limit in doing sentiment analysis on tweets, and thus will be exploring ways to improve the accuracy of Naive Bayes with preprocessing methods.
+
 \section{Corpus Analysis \& Method}
 
 The dataset consists of tweet texts labelled with one of three sentiment classes: negative, neutral, or positive. 
@@ -143,11 +175,16 @@ For feature engineered and preprocessing steps that were counterproductive, we w
 We finally contrast it with RoBERTa, to showcase what the upper limit of the SOTA can achieve as well as whether certain preprocessing and engineered feature that may have served the Bi-LSTM well does not contribute as much to RoBERTa along with the ratonale.
 
 
+<<<<<<< HEAD
 \section{Naive Bayes method}
 For the classical baseline, we trained a Multinomial Naive Bayes classifier. 
 Text was vectorized using a count-based representation. 
 We performed hyperparameter grid search using sklearn's RandomizedSearchCV and GridSearchCV functions over the vectorizer and model settings, including the n-gram range, minimum document frequency, vocabulary size, and smoothing parameter alpha. 
 Starting from a wide range for each feature, We did randomized grid search a few times, and slowly zoomed in to test more precise values.
+=======
+\subsection{Naive Bayes method}
+For the classical baseline, we trained a Multinomial Naive Bayes classifier. Text was vectorized using a count-based representation. We performed hyperparameter grid search using sklearn's RandomizedSearchCV and GridSearchCV functions over the vectorizer and model settings, including the n-gram range, minimum document frequency, vocabulary size, and smoothing parameter alpha. Starting from a wide range for each feature, We did randomized grid search a few times, and slowly zoomed in to test more precise values.
+>>>>>>> 4a03b3f95fc0ebe09064f13aed33b7e55ca49524
 
 The best-performing configuration and the test ranges used are presented in Table 1.
 
@@ -181,7 +218,20 @@ Hyperparameter tuning further improved the accuracy from about 0.69 to 0.71, sug
 
 These results suggest that even a relatively simple bag-of-words model can perform competitively when supported by suitable preprocessing and decision-threshold tuning.
 
+<<<<<<< HEAD
 \section{LSTM method}
+=======
+\subsection{RoBERTa method}
+
+To compare against a pretrained transformer, we fine-tuned DistilRoBERTa on the sentiment dataset. Instead of directly treating the task as a 3-way classification problem, the notebook formulates it as regression over sentiment scores, where negative, neutral, and positive are mapped to -1, 0, and 1 respectively. The regression outputs are then converted back into class labels using thresholding.
+
+The model used a maximum sequence length of 64, batch size of 32, learning rate of 2e-5, weight decay of 0.01, and one training epoch. This design keeps training lightweight while still leveraging contextual representations learned from large-scale pretraining.
+
+Compared with Naive Bayes, RoBERTa is expected to better capture contextual sentiment cues, especially cases involving negation, composition, and longer dependencies that are difficult to represent with bag-of-words features alone.
+
+
+\subsection{LSTM method}
+>>>>>>> 4a03b3f95fc0ebe09064f13aed33b7e55ca49524
 
 We implement a Bidirectional Long Short-Term Memory (Bi-LSTM) classifier as an intermediate model that bridges the link from Naive Bayes to RoBERTa. The choice of choice of Bi-LSTM is motivated by two key limitations of Naive Bayes, 
 the bag-of-words independence assumption renders it unable to model word order or sequential context and it cannot capture long-range dependencies, which are critical for sentiment in compound and complex sentences.
