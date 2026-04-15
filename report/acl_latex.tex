@@ -68,14 +68,21 @@ You can (and should) access the live version of this file through the URL below:
 
 Sentiment analysis is a fundamental task in natural language processing (NLP), with applications ranging from market analysis to public opinion monitoring. Social media platforms such as Twitter present a particularly interesting setting for sentiment classification due to the informal, noisy, and highly contextual nature of the language used. Tweets often contain misspellings, abbreviations, emojis, and linguistic constructs such as negation that can significantly affect sentiment interpretation. These characteristics make Twitter sentiment classification a challenging benchmark for machine learning models.
 
-Traditional machine learning approaches such as Naive Bayes have long been used for text classification tasks due to their simplicity, efficiency, and relatively strong performance on bag-of-words representations. However, Naive Bayes relies on strong independence assumptions such as the Bag of Words (BoW) assumption, which limits its ability to capture linguistic phenomena such as negation, contextual dependencies, and word interactions. In contrast, modern deep learning models such as RoBERTa have become state-of-the-art(SOTA) for sentiment analysis by leveraging contextual embeddings and large-scale pretraining.
+Traditional machine learning approaches such as Naive Bayes have long been used for text classification tasks due to their simplicity, efficiency, and relatively strong performance on bag-of-words representations. However, Naive Bayes relies on strong independence assumptions such as the Bag of Words (BoW) assumption, which limits its ability to capture linguistic phenomena such as negation, contextual dependencies, and word interactions. 
+Sequential neural models such as Bidirectional LSTMs address these limitations by learning order-sensitive contextual representations, but remain constrained by the amount of in-domain training data available.
+In contrast, modern pretrained transformer models such as RoBERTa have become state-of-the-art(SOTA) for sentiment analysis by leveraging large-scale pretraining to obtain rich contextual representations that generalise well to downstream tasks with minimal fine-tuning.
 
-Despite the superior performance of transformer-based models, classical algorithms like Naive Bayes remain attractive due to their interpretability, computational efficiency, and ease of deployment. An important question is therefore how far such classical models can be improved through careful preprocessing and feature engineering. In particular, preprocessing techniques such as negation handling, lemmatization, contraction expansion, filtering of noisy tokens, and custom handling of internet-specific language features may help mitigate some of the limitations of the BoW assumption.
+Despite the superior performance of transformer-based models, classical algorithms like Naive Bayes remain attractive due to their interpretability, computational efficiency, and ease of deployment. 
+A key question is therefore how far careful preprocessing and feature engineering compensate the structural limitation of simpler models.
+For Naive Bayes, preprocessing techniques and feature engineering compensates for model capability and strong BoW assumptions, for example explicit negation tagging, handling of expressive lengthening and lexicon injections.
 
-In this project, we investigate the strengths and limitations of different approaches to sentiment classification on Twitter data. We first implement a baseline end-to-end Naive Bayes pipeline and evaluate its performance. We then develop a specialised variant of Naive Bayes that incorporates extensive preprocessing designed to address common weaknesses of BoW models, particularly with respect to negation and linguistic variation. In order to uncover the remaining weaknesses, we train RoBERTa, a SOTA model, on the same dataset, and inspect the instances where RoBERTa predicts the right label but Naive Bayes fails. From this, we come up with further preprocessing features to improve the performance of Naive Bayes. 
+Through this comparison, we aim to identify the extent to which preprocessing can compensate for the structural limitations of Naive Bayes, and to highlight the types of linguistic patterns that remain difficult for such models to capture. 
+Then we evaluate if the same preprocessing and engineered feature become redundant or countereffective for Bi-LSTM as the improved architecture learns it equivalent from sequential context and better token representation with GloVe. 
+Lastly, RoBERTa, where the preprocessing and feature engineering might be disruptive due to its superior architecture and large scale pretraining.
 
-Through this comparison, we aim to identify the extent to which preprocessing can compensate for the structural limitations of Naive Bayes, and to highlight the types of linguistic patterns that remain difficult for such models to capture.
-
+We investigate this progression empirically. We first build a Naive Bayes pipeline with extensive preprocessing and feature engineering to push the limits of the Naive Bayes. We then apply the same preprocessing to a Bi-LSTM to evaluate whether steps that helped 
+Naive Bayes remain beneficial under a sequential architecture, supported with better word representation (GloVe). Then finally, on RoBERTa, to see if the remaining feature engineering and processing was beneficial to it with large scale pre training. Through this, we can also uncover remaining weaknesses in Naive Bayes, by 
+training Naive Bayes and RoBERTa on the same dataset to inspect instances where RoBERTA succeeded while Naive Bayes failed.
 %%%%%
 
 \section{Related Work / Background}
@@ -112,45 +119,74 @@ From these industry projects, we thus have hope that we can simply push Naive Ba
 
 \section{Corpus Analysis \& Method}
 
-The dataset consists of tweet texts labelled with one of three sentiment classes: negative, neutral, or positive. The raw training set contains 27,481 rows and the raw test set contains 4,815 rows. After removing rows with missing values in critical fields such as text and sentiment, 1 row was dropped from the training set and 1,281 rows were dropped from the test set, leaving 27,480 training rows and 3,534 test rows. Within the training set, 11117 rows have neutral sentiment, 8582 have positive sentiment and 7781 have negative sentiment. As the distribution of sentiment seems to be rather balanced with no significant minority, we chose not to apply class-balancing techniques as oversampling and undersampling incur their own tradeoffs.
+The dataset consists of tweet texts labelled with one of three sentiment classes: negative, neutral, or positive. 
+The raw training set contains 27,481 rows and the raw test set contains 4,815 rows. 
+After removing rows with missing values in critical fields such as text and sentiment, 1 row was dropped from the training set and 1,281 rows were dropped from the test set, leaving 27,480 training rows and 3,534 test rows. 
+The distribution of sentiment in the training dataset is as follows
+\begin{table}[!ht]
+\centering
+\begin{tabular}{lcr}
+\hline
+\textbf{Sentiment Label} & \textbf{Count} \\
+\hline
+Negative & 7,781 \\
+Neutral & 11,117 \\
+Positive & 8,582 \\
+\hline
+\end{tabular}
+\caption{Best-performing Naive Bayes hyperparameters}
+\end{table}
+As the distribution of sentiment seems to be rather balanced with no significant minority, we chose not to apply class-balancing techniques as oversampling and undersampling incur their own tradeoffs.
 
-In addition to tweet text, the dataset includes metadata such as country, age group, time of tweet, population, land area, and density. However, our exploratory analysis suggested that these metadata features are weak predictors of sentiment. Sentiment distributions remained broadly balanced across these categories so we chose to focus primarily on the tweet text itself rather than these auxiliary variables.
+In addition to tweet text, the dataset includes metadata such as country, age group, time of tweet, population, land area, and density. 
+However, our exploratory analysis suggested that these metadata features highlighted that sentiment distribution were largely balanced across these categories, hence are weak predictors of sentiment. 
+Therefore, we chose to drop these auxiliary variables and focus primarily on the tweet text itself rather than 
 
-Note that the value present in ``selected\_text'' is a subset of the value present in ``text''. While the process of deriving ``selected\_text'' is not explicitly documented in the dataset, the assumption is that it represents the most relevant part of the tweet that led to the classification result. Regardless, this column is not present in the test set and hence excluded from training.
+A `selected\_text` column, which is a subset of the value present in `text` was provided in the train datatset and not the test dataset.
+While the process of deriving and purpose of `selected\_text`' is not explicitly documented in the dataset, we inferred that it represents the most relevant part of the tweet that led to the assignment of the sentiment label of the text. 
+Since this column was not provided in test set, we are unable to validate it and hence excluded from training and testing purposes.
 
-As our goal is to analyse how model architectures affect performance, we apply the same preprocessing pipeline to all three models.
+As our goal is to identify preprocessing steps that bridges the gap between Naive Bayes, we consider and begin with preprocessing and feature engineering that would greatly address the limitation, improve interpretabilty 
+and performance of Naive Bayes, that will be less beneficial and counter productive for advanced models like Bi-LSTM followed by RoBERTa.
 
 \begin{enumerate}
-    \item \textbf{Removal of rows with critical missing values.} Rows with missing values in the ``text'' and ``sentiment'' columns are removed. It was manually observed that all the testing rows that are dropped are merely empty rows caused by formatting issues.
-    \item \textbf{Lowercasing.} All tokens are converted to lowercase to reduce vocabulary sparsity by allowing a single set of weights per word to be learned (e.g., ``Good'' and ``good'' are mapped to the same feature). While this discards potential signals from ALL CAPS that signals against a neutral classification, our experiments indicate that the signal was largely inconsistent so the generalization gain outweighted the potential information loss. 
-    \item \textbf{Translation of emoticons.} Emoticons are translated to their corresponding text representation to reduce vocabulary sparsity.
+    \item \textbf{Removal of rows with critical missing values.} Rows with missing values in the ``text'' and ``sentiment'' columns are removed. It was manually observed that all the testing and training rows that are dropped are merely empty rows.
+    \item \textbf{Lowercasing.} Converting tokens to lowercase reduces vocabulary sparsity. However, since all caps tokens (e.g GOOD) may serve as a potential signal, we ...
+    \item \textbf{Removal of URLs.} URLs are removed as they are not informative for sentiment classification and introduces noise into the feature space.
     \item \textbf{Removal of numbers.} Numeric tokens are removed because they rarely carry stable sentiment signals in the corpus and can introduce noise into bag-of-words features (e.g., for the sentence ``I earned 100 dollars after a day's work'', it is uncertain whether 100 is a large enough number for this sentence to be positive or negative). 
+    
+    \item \textbf{Lemmatisation.} Lemmatisation, reduces the vocabulary size and my improve the frequency estimation for rare forms. However, the morphological form may carry sentiment relevant signals and removing them might affect performance. Therefore, we conducted experiments to evaluate its contribution.
+    \item \textbf{Stopword Removal.} Removing Stopwords, reduces the vocabulary size but is widely known to risk performance as by removing critical words that are negative in nature (e.g 'not', 'should'nt'). Therefore, we curated a list of certain stopwords that are crucial and are not excluded during the removal process (e.g not, shouldn't etc). Ultimately, we evaluate its contribution.
+    
+    \item \textbf{Translation of emoticons.} Emoticons are translated to their text equivalent ((e.g :( -> 'sad face' and :) -> 'happy face')) to prevent it from getting regarded as OOV (especially since it might be fragmented by tokenisation). This provides it more sentiment signal for improved performance.
     \item \textbf{Negation tagging.} We explicitly model local negation scope by prefixing the next $N$ tokens with \texttt{NOT\_} after a negation trigger (e.g., \textit{not good at all} $\rightarrow$ \textit{NOT\_good NOT\_at NOT\_all} for $N{=}3$). This helps the model distinguish polarity reversals such as ``good'' versus ``not good''.
-    \item \textbf{Removal of URLs.} URLs are removed as they are not informative for sentiment classification and can introduce noise into the feature space.
     \item \textbf{Removal of expressive lengthening.} Expressive lengthening such as ``soooo'' could be replaced with ``soo'' to reduce the vocabulary space. The logic involves replacing repeated characters of more than length 2 with only 2 characters. Our experiments indicate that performance gains caused by a smaller vocabulary space did not outweigh the loss of sentiment information caused by the removal of expressive lengthening, indicating that the expressive lengthenings are meaningful indicators of sentiment.
 
-\end{enumerate}
-
-The following pre-processing steps are removed from the preprocessing pipelines as they did not improve the performance of the models:
-
-\begin{enumerate}
-    \item \textbf{Removal of stopwords.} The performance of the model worsened after experimenting with both the nltk stopword list and a custom-created list that preserves words which signal sentiment. This may be because stopwords can carry implicit structural and contextual cues that the model relies on, and their removal disrupts the natural flow of text, leading to a loss of information that is difficult to recover.
-    \item \textbf{Lemmatization.} Lemmatization was empirically observed to have worsened performance despite the potential benefits of reducing the vocabulary space. A likely reason is that morphological variations (e.g., verb tenses, plural forms) can themselves carry sentiment-relevant information --- for instance, \textit{loved} versus \textit{love} --- which is erased when words are reduced to their base form.
+    \item \textbf{VADER Lexicon Dictionary}. VADER sentiment lexicon are a pre computed sentiment scores from a curated dictionary of words that will provide a reliable prior of sentiment that the frequency estimate alone could not. This scores will be concatenated with the count vector of Naive Bayes to improve the signal for sentiment classification. 
+    
+    \item \textbf{GloVe}. Glove was used to initialise the embedding layer of the Bi-LSTM. GloVE provides a strong prior learned from a large external corpus. From our experiments, GloVe makes up about 40\% of the tokens in the dataset, therefore, while there is assistance from the prior, the embedding layer still largely relies on the randomly initialised representation. 
 \end{enumerate}
 
 
 \section{Experiments}
+Naive Bayes will serve as our baseline model with all the preprocessing steps to push the limits of performance and interpretability. Ablations of the preprocessing steps and feature engineered is done after to identify methods that may not
+be as useful for Naive Bayes and plausible rationales. Then Bi-LSTM will be applied with the preprocessing steps and feature engineering that served the Naive Bayes model well to evaluate whether the contribution to the model is counterproductive. 
+For feature engineered and preprocessing steps that were counterproductive, we will attempt to identify the rationale and highlight the relationship between explicit preprocessing and feature engineering with better model architecture and better representation learning.
+We finally contrast it with RoBERTa, to showcase what the upper limit of the SOTA can achieve as well as whether certain preprocessing and engineered feature that may have served the Bi-LSTM well does not contribute as much to RoBERTa along with the ratonale.
 
-Exploratory data analysis showed that the sentiment labels were relatively balanced across the three classes, so we did not apply class-balancing techniques such as oversampling or undersampling. We also examined several linguistic properties of the tweets. The corpus contained substantial numbers of URLs, hashtags, emoticons, and elongated expressions, confirming that the dataset reflects the noisy and informal nature of social media text.
 
-While the dataset contains additional metadata such as country, age group, and time of tweet, our modelling pipeline focuses exclusively on textual features. Therefore, we restrict our models to operate on tweet text.
-
+<<<<<<< HEAD
+\section{Naive Bayes method}
+For the classical baseline, we trained a Multinomial Naive Bayes classifier. 
+Text was vectorized using a count-based representation. 
+We performed hyperparameter grid search using sklearn's RandomizedSearchCV and GridSearchCV functions over the vectorizer and model settings, including the n-gram range, minimum document frequency, vocabulary size, and smoothing parameter alpha. 
+Starting from a wide range for each feature, We did randomized grid search a few times, and slowly zoomed in to test more precise values.
+=======
 \subsection{Naive Bayes method}
 For the classical baseline, we trained a Multinomial Naive Bayes classifier. Text was vectorized using a count-based representation. We performed hyperparameter grid search using sklearn's RandomizedSearchCV and GridSearchCV functions over the vectorizer and model settings, including the n-gram range, minimum document frequency, vocabulary size, and smoothing parameter alpha. Starting from a wide range for each feature, We did randomized grid search a few times, and slowly zoomed in to test more precise values.
+>>>>>>> 4a03b3f95fc0ebe09064f13aed33b7e55ca49524
 
 The best-performing configuration and the test ranges used are presented in Table 1.
-
-The optimal n-gram range indicates that unigram and bigram features were sufficient, while more complex n-gram ranges did not yield better cross-validation performance in the saved notebook.
 
 \begin{table}[!ht]
 \centering
@@ -168,6 +204,8 @@ Vectorizer & Count & Count, TF-IDF \\
 \caption{Best-performing Naive Bayes hyperparameters}
 \end{table}
 
+The optimal n-gram range indicates that unigram and bigram features were sufficient, while more complex n-gram ranges did not yield better cross-validation performance in the saved notebook.
+
 Unlike standard multiclass classification, our notebook maps sentiment labels to ordinal scores {-1, 0, 1} and also experiments with threshold calibration for converting prediction scores back to discrete classes. This was done to improve macro-F1, especially for the neutral class, which often lies between clearly positive and clearly negative examples.
 
 \subsection{Naive Bayes results}
@@ -180,6 +218,9 @@ Hyperparameter tuning further improved the accuracy from about 0.69 to 0.71, sug
 
 These results suggest that even a relatively simple bag-of-words model can perform competitively when supported by suitable preprocessing and decision-threshold tuning.
 
+<<<<<<< HEAD
+\section{LSTM method}
+=======
 \subsection{RoBERTa method}
 
 To compare against a pretrained transformer, we fine-tuned DistilRoBERTa on the sentiment dataset. Instead of directly treating the task as a 3-way classification problem, the notebook formulates it as regression over sentiment scores, where negative, neutral, and positive are mapped to -1, 0, and 1 respectively. The regression outputs are then converted back into class labels using thresholding.
@@ -190,13 +231,16 @@ Compared with Naive Bayes, RoBERTa is expected to better capture contextual sent
 
 
 \subsection{LSTM method}
+>>>>>>> 4a03b3f95fc0ebe09064f13aed33b7e55ca49524
 
-We also implemented an LSTM-based classifier as an intermediate neural baseline between Naive Bayes and RoBERTa. The LSTM pipeline uses a custom vocabulary with minimum frequency filtering, padded mini-batches, trainable embeddings, and a bidirectional LSTM encoder followed by dropout and a linear classification layer.
+We implement a Bidirectional Long Short-Term Memory (Bi-LSTM) classifier as an intermediate model that bridges the link from Naive Bayes to RoBERTa. The choice of choice of Bi-LSTM is motivated by two key limitations of Naive Bayes, 
+the bag-of-words independence assumption renders it unable to model word order or sequential context and it cannot capture long-range dependencies, which are critical for sentiment in compound and complex sentences.
+A Bi-LSTM processes the token sequence both left-to-right and right-to-left, learning contextual representations that encode the influence of surrounding tokens, and is therefore structurally better 
+suited to these phenomena, it also takes in certain preprocessing steps that helps it improve the performance while maintaining so interpretability.
 
-The preprocessing for the LSTM includes lowercasing, lemmatization, URL removal, translation of hashtags and emoticons, and retention of stopwords. This setup is intended to preserve sentiment-bearing function words while reducing noise from informal tweet formatting.
-
-Hyperparameter tuning was performed over embedding dimension, hidden dimension, dropout rate, batch size, and bidirectionality. The best hyperparameter setting recorded in the notebook was 
-
+The Bi-LSTM is trained with GloVe a pre trained embedding and when through a grid search to identify the best set of hyperparamter. To reduce complexity and consistency, the best set of hyperparamter from the baseline of the Bi-LSTM is trained and subsequently used for all teh following ablatiosn to identify the contributionsof certain pre processing steps that were effective 
+on the Naive Bayes model but not as much the Bi-LSTM. The motivation of this model is to show how as the number of interpretbale feature decrreases adn better deep and complex representation of linguistic features, such as with the long range dependencies of the LSTM with is activation fucntion and with GloVe, the model starts performing better and that traditional preprocessing steps can become
+counter productive, affecting the performance of the model. The implication of this is that it shows how ... and as we can see the performance of RobERTa downstream is significantly superior by reinforcing the strenghts of LSTM and lesser of the strengths and contributions for traditonal model like NB. 
 \begin{table}[h]
 \centering
 \begin{tabular}{lc}
@@ -204,15 +248,34 @@ Hyperparameter tuning was performed over embedding dimension, hidden dimension, 
 \textbf{Hyperparameter} & \textbf{Value} \\
 \hline
 Embedding dimension & 100 \\
-Hidden dimension & 256 \\
-Dropout & 0.4 \\
+Hidden dimension & [256] \\
+Dropout & 0.4  \\
 Batch size & 32 \\
 Number of layers & 1 \\
 Bidirectional & True \\
 \hline
 \end{tabular}
-\caption{Best-performing LSTM hyperparameters}
+\caption{Best-performing LSTM hyperparameters, Embedding dimension fixed at 100 to align with embedding dim of GloVe}
 \end{table}
+
+\subsection{Bi-LSTM results}
+
+Using default sentiment thresholds of -0.33 and 0.33, the Naive Bayes model achieved an overall accuracy of 0.69 and a macro-F1 score of 0.69 on the test set. Class-wise results showed that positive tweets were the easiest to classify, while neutral tweets were more difficult.
+
+We additionally performed threshold calibration on the predicted sentiment scores to improve macro-F1. By tuning decision boundaries for negative and positive classes, we observed a small improvement in macro-F1, suggesting that the neutral class benefits from more flexible decision thresholds. This calibration slightly improved the balance across classes, particularly by increasing neutral-class recall, although overall accuracy remained around 0.69.
+
+Hyperparameter tuning further improved the accuracy from about 0.69 to 0.71, suggesting that the model is already highly optimised, and that the limitations come from the model architecture or the dataset.
+
+These results suggest that even a relatively simple bag-of-words model can perform competitively when supported by suitable preprocessing and decision-threshold tuning.
+
+
+\section{RoBERTa method}
+
+To compare against a pretrained transformer, we fine-tuned DistilRoBERTa on the sentiment dataset. Instead of directly treating the task as a 3-way classification problem, the notebook formulates it as regression over sentiment scores, where negative, neutral, and positive are mapped to -1, 0, and 1 respectively. The regression outputs are then converted back into class labels using thresholding.
+
+The model used a maximum sequence length of 64, batch size of 32, learning rate of 2e-5, weight decay of 0.01, and one training epoch. This design keeps training lightweight while still leveraging contextual representations learned from large-scale pretraining.
+
+Compared with Naive Bayes, RoBERTa is expected to better capture contextual sentiment cues, especially cases involving negation, composition, and longer dependencies that are difficult to represent with bag-of-words features alone.
 
 \section{Discussion}
 
