@@ -84,17 +84,15 @@ Through this comparison, we aim to identify the extent to which preprocessing ca
 
 In the industry, there have been many models used to do sentiment analysis on tweets. Most of the top performing models use LSTM-type models, according to nlpprogress.com\footnote{The website used: \url{https://nlpprogress.com/english/sentiment_analysis.html}.}. 
 
-As shown in this website, the best sentiment analysis model\footnote{The model used: \url{https://arxiv.org/pdf/1906.08237}.} had an accuracy of 96\%, using a self-attention setup. The only preprocessing done was just encoding relative positioning in the vector representation.
+As shown in this website, the best sentiment analysis model (up to 2019)\footnote{The model used: \url{https://arxiv.org/pdf/1906.08237}.} had an accuracy of 96\%, using a self-attention setup. The only preprocessing done was just encoding relative positioning in the vector representation.
 
 However, as transformers are more computationally expensive and harder to interpret, we wanted to see if the standard Naive Bayes with preprocessing was enough to rival the performance of the best models.
 
-\subsection{Tweets Preprocessing by Palonimo et al.}
+\subsection{Evaluating the Effectiveness of Text Pre-Processing in Sentiment Analysis (2022) by Palonimo et al.}
 
 However, significant research has also been done in the industry on improving preprocessing methods.
 
-In this paper\footnote{The paper by Palonimo et al.: \url{https://www.mdpi.com/2076-3417/12/17/8765}.} by Palonimo et al, where they showcased a Naive Bayes Classifer used on tweets, and tested various preprocessing pipelines to test the effectiveness of diifferent preprocessing pipelines. 
-
-They have also provided a table of their accuracy scores they obtained with different preprocessing pipelines, as well as with no preprocessing, which allows for a good benchmark for our models.
+In this paper\footnote{The paper by Palonimo et al.: \url{https://www.mdpi.com/2076-3417/12/17/8765}.} by Palonimo et al, where they showcased a Naive Bayes Classifer used on tweets, and tested various preprocessing pipelines to test the effectiveness of diifferent preprocessing pipelines. They have also provided a table of their accuracy scores they obtained with different preprocessing pipelines, as well as with no preprocessing, which allows for a good benchmark for our models.
 
 In both cases, it was shown that Naive Bayes managed to obtain a very high accuracy, with as high as 91\% on gold standard datasets, and 86\% on the whole dataset overall. This highlights its potential to be a decent classifier despite its simplicity. 91\% is also very close to the self-attention model's accuracy, at 96\%, suggesting that it might be able to come close to the accuracy of more sophisticated models.
 
@@ -102,7 +100,15 @@ However, the tweets they used were from the political domain, about the Grand Ol
 
 With our much more neutral and nuanced dataset from Kaggle, our goal is to see if Naive Bayes could still hold up against a dataset with not so polarizing comments.
 
+\subsection{Implementation of Naive Bayes Algorithm on Sentiment Analysis Application (2021) by Martiti et al.}
 
+In this paper\footnote{The paper by Martiti et al.: \url{https://www.atlantis-press.com/article/125963764.pdf}.}, there is yet another sentiment analysis classifier made with simple Naive Bayes, but this time done on Grab Twitter comments. This is done with TF-IDF vectors instead of Count vectors. As shown, they managed to achieve an impressive 99.623\% accuracy on their Naive Bayes classifier, which highlights the massive potential in just using Naive Bayes.
+
+However, as the dataset is different (Tweet comments about Grab instead of general tweets), which are usually more polarizing by nature, it might not reflect the actual potential of just using Naive Bayes on more neutral tweets. Furthermore, as our tweets cover a much wider range of context, rather than just one (Grab), it will likely be more difficult to just use Naive Bayes on the tweet dataset. As such, we want to try to push Naive Bayes as far as we can with our dataset.
+
+\subsection{Summary Comments on Industry Projects}
+
+From these industry projects, we thus have hope that we can simply push Naive Bayes to its limit in doing sentiment analysis on tweets, and thus will be exploring ways to improve the accuracy of Naive Bayes with preprocessing methods.
 
 \section{Corpus Analysis \& Method}
 
