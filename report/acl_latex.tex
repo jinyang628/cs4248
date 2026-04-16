@@ -89,9 +89,9 @@ training Naive Bayes and RoBERTa on the same dataset to inspect instances where 
 
 \subsection{State of the Art Models}
 
-In the industry, there have been many models used to do sentiment analysis on tweets. Most of the top performing models use LSTM-type models, according to nlpprogress.com\footnote{The website used: \url{https://nlpprogress.com/english/sentiment_analysis.html}.}. 
+There has been much research in the field of sentiment analysis for web content such as tweets. Most of the top performing models use LSTM-type models\citep{ruder-2026}. 
 
-As shown in this website, the best sentiment analysis model (up to 2019)\footnote{The model used: \url{https://arxiv.org/pdf/1906.08237}.} had an accuracy of 96\%, using a self-attention setup. The only preprocessing done was just encoding relative positioning in the vector representation.
+According to \url{https://nlpprogress.com}, the best sentiment analysis model (up to 2019)\citep{yang-2019} had an accuracy of 96\%, using a self-attention setup. The only preprocessing done was just encoding relative positioning in the vector representation.
 
 However, as transformers are more computationally expensive and harder to interpret, we wanted to see if the standard Naive Bayes with preprocessing was enough to rival the performance of the best models.
 
@@ -99,7 +99,7 @@ However, as transformers are more computationally expensive and harder to interp
 
 However, significant research has also been done in the industry on improving preprocessing methods.
 
-In this paper\footnote{The paper by Palonimo et al.: \url{https://www.mdpi.com/2076-3417/12/17/8765}.} by Palonimo et al, where they showcased a Naive Bayes Classifer used on tweets, and tested various preprocessing pipelines to test the effectiveness of diifferent preprocessing pipelines. They have also provided a table of their accuracy scores they obtained with different preprocessing pipelines, as well as with no preprocessing, which allows for a good benchmark for our models.
+In this paper\citep{palomino-2022}, where they showcased a Naive Bayes Classifer used on tweets, and tested various preprocessing pipelines to test the effectiveness of diifferent preprocessing pipelines. They have also provided a table of their accuracy scores they obtained with different preprocessing pipelines, as well as with no preprocessing, which allows for a good benchmark for our models.
 
 In both cases, it was shown that Naive Bayes managed to obtain a very high accuracy, with as high as 91\% on gold standard datasets, and 86\% on the whole dataset overall. This highlights its potential to be a decent classifier despite its simplicity. 91\% is also very close to the self-attention model's accuracy, at 96\%, suggesting that it might be able to come close to the accuracy of more sophisticated models.
 
@@ -109,7 +109,7 @@ With our much more neutral and nuanced dataset from Kaggle, our goal is to see i
 
 \subsection{Implementation of Naive Bayes Algorithm on Sentiment Analysis Application (2021) by Martiti et al.}
 
-In this paper\footnote{The paper by Martiti et al.: \url{https://www.atlantis-press.com/article/125963764.pdf}.}, there is yet another sentiment analysis classifier made with simple Naive Bayes, but this time done on Grab Twitter comments. This is done with TF-IDF vectors instead of Count vectors. As shown, they managed to achieve an impressive 99.623\% accuracy on their Naive Bayes classifier, which highlights the massive potential in just using Naive Bayes.
+In this paper\citep{martiti-2021}, there is yet another sentiment analysis classifier made with simple Naive Bayes, but this time done on Grab Twitter comments. This is done with TF-IDF vectors instead of Count vectors. As shown, they managed to achieve an impressive 99.623\% accuracy on their Naive Bayes classifier, which highlights the massive potential in just using Naive Bayes.
 
 However, as the dataset is different (Tweet comments about Grab instead of general tweets), which are usually more polarizing by nature, it might not reflect the actual potential of just using Naive Bayes on more neutral tweets. Furthermore, as our tweets cover a much wider range of context, rather than just one (Grab), it will likely be more difficult to just use Naive Bayes on the tweet dataset. As such, we want to try to push Naive Bayes as far as we can with our dataset.
 
@@ -161,7 +161,7 @@ As our goal is to identify preprocessing steps that bridges the gap between Naiv
     \item \textbf{Negation tagging.} We explicitly model local negation scope by prefixing the next $N$ tokens with \texttt{NOT\_} after a negation trigger (e.g., \textit{not good at all} $\rightarrow$ \textit{NOT\_good NOT\_at NOT\_all} for $N{=}3$). This helps the model distinguish polarity reversals such as ``good'' versus ``not good''.
     \item \textbf{Removal of expressive lengthening.} Expressive lengthening such as ``soooo'' could be replaced with ``soo'' to reduce the vocabulary space. The logic involves replacing repeated characters of more than length 2 with only 2 characters. Our experiments indicate that performance gains caused by a smaller vocabulary space did not outweigh the loss of sentiment information caused by the removal of expressive lengthening, indicating that the expressive lengthenings are meaningful indicators of sentiment.
 
-    \item \textbf{VADER Lexicon Dictionary}. VADER sentiment lexicon are a pre computed sentiment scores from a curated dictionary of words that will provide a reliable prior of sentiment that the frequency estimate alone could not. This scores will be concatenated with the count vector of Naive Bayes to improve the signal for sentiment classification. 
+    \item \textbf{VADER Lexicon Dictionary}. VADER\citep{hutto-2014} sentiment lexicon are a pre computed sentiment scores from a curated dictionary of words that will provide a reliable prior of sentiment that the frequency estimate alone could not. This scores will be concatenated with the count vector of Naive Bayes to improve the signal for sentiment classification. 
     
     \item \textbf{GloVe}. Glove was used to initialise the embedding layer of the Bi-LSTM. GloVE provides a strong prior learned from a large external corpus. From our experiments, GloVe makes up about 40\% of the tokens in the dataset, therefore, while there is assistance from the prior, the embedding layer still largely relies on the randomly initialised representation. 
 \end{enumerate}
@@ -588,7 +588,7 @@ Use \verb|\appendix| before any appendix section to switch the section numbering
 \clearpage
 
 % Entries for the entire Anthology, followed by custom entries
-\bibliography{anthology,custom}
+\bibliography{refs}
 \bibliographystyle{acl_natbib}
 
 \section*{Acknowledgements}
