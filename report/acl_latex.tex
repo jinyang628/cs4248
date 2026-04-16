@@ -165,7 +165,6 @@ As our goal is to identify preprocessing steps that bridges the gap between Naiv
 \subsection{Feature Engineering}
 \begin{enumerate}
     \item \textbf{Translation of emoticons.} Emoticons are translated to their text equivalent ((e.g :( -> `sad face' and :) -> `happy face')) to prevent them from getting regarded as OOV (especially since they may be fragmented by tokenisation). This provides them more sentiment signal for improved performance.
-    \item \textbf{Removal of expressive lengthening.} Expressive lengthening such as ``soooo'' could be replaced with ``soo'' to reduce the vocabulary space. The logic involves replacing repeated characters of more than length 2 with only 2 characters. Our experiments indicate that performance gains caused by a smaller vocabulary space did not outweigh the loss of sentiment information caused by the removal of expressive lengthening, indicating that the expressive lengthenings are meaningful indicators of sentiment.
     \item \textbf{Injection of VADER Sentiment Token.} Valence Aware Dictionary and Entiment Reasoner (VADER) \citep{hutto-2014} is a lexicon and rule based sentiment tool trained on social media text. Given a text, outputs a score from -1 to 1, to which we used to append a sentence level sentiment token `VADER\_POSITIVE', `VADER\_NEGATIVE' and `VADER\_NEUTRAL' at the end of the text if the score is \(\geq 0.05 \), \(\leq 0.05 \) or otherwise respectively. 
     This partially proxies the large training corpus that RoBERTa and LSTM are trained on, by granting the model gains access to an external sentiment signal derived from a rich, human-validated lexicon.
     \item \textbf{Injection of Fragmented VADER Sentiment Token.} While similar to the above, there is a first split of the text on clause boundaries (e.g `,', `;', `but') then apply VADER on each fragments to append tokens such as `FRAG1\_NEGATIVE' and `FRAG2\_NEUTRAL' to implied the sentiment of each segment. This better represenation of polarity shifts that Naive Bayes may miss as a result of the independence assumption it holds, that LSTM and RoBERTa does not face due to it ability to handle long ranges sequential data. 
@@ -223,17 +222,16 @@ Unlike standard multiclass classification, our notebook maps sentiment labels to
 Baseline & 0.66 & 0.66 \\
 \hline
 + Translate Emoticon               & 0.66 & 0.66 \\
-+ Normalise Elongation             & 0.66 & 0.66 \\
-+ SVO Triplets                     & 0.66 & 0.66 \\
-+ Position Tagging                 & 0.66 & 0.66 \\
++ Normalise Exp. Lengthening       & 0.66 & 0.66 \\
++ Subject-Verb-Object              & 0.66 & 0.66 \\
 \hline
 + VADER + Frag VADER               & 0.70 & 0.70 \\
-+ Negation Scoping                 & 0.67 & 0.66 \\
++ Negation Tagging                 & 0.67 & 0.66 \\
 + Polarity Propagation             & 0.67 & 0.67 \\
 + Lemmatise                        & 0.67 & 0.66 \\
 \hline
 \textbf{+ VADER + Frag VADER}      &      & \\
-\textbf{+ Negation Scoping}        &      & \\
+\textbf{+ Negation Tagging}        &      & \\
 \textbf{+ Polarity Propagation + Lemmatise} & \textbf{0.71} & \textbf{0.71} \\
 \hline
 \end{tabular}
@@ -257,7 +255,7 @@ We implemented a Bidirectional Long Short-Term Memory (Bi-LSTM) classifier as an
 The choice of choice of Bi-LSTM is motivated by two key limitations of Naive Bayes, 
 the bag-of-words independence assumption renders it unable to model word order or sequential context and it cannot capture long-range dependencies, which are critical for sentiment in compound and complex sentences.
 A Bi-LSTM processes the token sequence both left-to-right and right-to-left, learning contextual representations that encode the influence of surrounding tokens, and is therefore structurally better 
-suited to these phenomena. The Bi-LSTM is trained with GloVe a pre trained embedding to 
+suited to these phenomena. The Bi-LSTM is trained with GloVe a pre trained embedding to initialize the input token representations with semantically rich word embeddings learned from a large external corpus, providing the model with meaningful lexical priors.
 
 We trained a baseline Bi-LSTM with basic preprocessing such as lowercasing, removal of URLs, removal of numbers and translating emoticons. 
 We performed a hyperparameter grid search over model parameters such as number of hidden dimension and number of layers to identify the best
@@ -295,7 +293,7 @@ Baseline & 0.72 & 0.72 \\
 + Lemmatise                 & 0.75 & 0.75 \\
 \hline
 + Lemmatise + VADER         &      & \\
-\quad + Frag VADER + Negation Scoping        &      & \\
+\quad + Frag VADER + Negation Tagging      &      & \\
 \quad + Polarity Propagation                 & 0.75 & 0.75 \\
 \hline
 \end{tabular}
@@ -320,7 +318,6 @@ The model used a maximum sequence length of 64, batch size of 32, learning rate 
 
 \begin{table}[h]
 \centering
-\caption{RoBERTa Ablation Study}
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{p{3cm} c c} 
 \hline
@@ -330,6 +327,7 @@ RoBERTa  & 0.78 & 0.78 \\
 RoBERTa + Lemmatise        & 0.78 & 0.78 \\
 \hline
 \end{tabular}
+\caption{RoBERTa Ablation Study}
 \label{tab:roberta_ablation}
 \end{table}
 
