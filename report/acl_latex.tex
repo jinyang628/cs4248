@@ -210,6 +210,9 @@ Hyperparameter tuning further improved the accuracy from about 0.69 to 0.71, sug
 
 These results suggest that even a relatively simple bag-of-words model can perform competitively when supported by suitable preprocessing and decision-threshold tuning.
 
+In order to better interpret the results for Naive Bayes, we extract the tweets in the test set that were correctly classified by RoBERTa but misclassified by Naive Bayes, and perform a qualitative analysis to identify linguistic patterns that are difficult for Naive Bayes to capture.
+Since Naive Bayes operates on a bag-of-words representation, we are able to extract the score contribution of each token in the tweet to the final prediction, and explain why the model makes the wrong prediction. Results of this analysis is discussed in the Discussion section.
+
 \subsection{RoBERTa method}
 
 To compare against a pretrained transformer, we fine-tuned DistilRoBERTa on the sentiment dataset. Instead of directly treating the task as a 3-way classification problem, the notebook formulates it as regression over sentiment scores, where negative, neutral, and positive are mapped to -1, 0, and 1 respectively. The regression outputs are then converted back into class labels using thresholding.
@@ -267,16 +270,36 @@ Compared with Naive Bayes, RoBERTa is expected to better capture contextual sent
 
 \section{Discussion}
 
+\subsection{Result Analysis: Naive Bayes vs. RoBERTa}
+
+By analyzing the log-likelihood contributions of individual tokens in instances where Naive Bayes (NB) misclassified but RoBERTa succeeded, we identified four primary linguistic patterns that challenge the bag-of-words (BoW) assumption.
+
+\begin{enumerate}
+    \item \textbf{Spurious Correlations of Neutral Tokens:} 
+    Tokens without inherent sentiment, such as \texttt{`day'} ($1.2487$) and \texttt{`downloaded'} ($1.5053$), frequently contribute to positive predictions simply due to their frequent co-occurrence with positive sentiment-bearing words in the training set. While NB captures these statistical correlations, it lacks the context-awareness to recognize when a neutral word is used in a negative phrase. For example, in the phrase ``worst day ever,'' the token \texttt{'day'} should not contribute to a positive classification. This highlights the fundamental limitation of the BoW assumption, which fails to capture the compositional meaning of words.
+
+    \item \textbf{Sentiment Inversion and Sequential Logic:} 
+    NB cannot account for shifts in sentiment polarity within a single document. For instance, the tweet ``was so excited to eat the watermelon... and it was terrible'' was misclassified as positive. This was driven by strong contributions from \texttt{`so excited'} ($2.6367$) and \texttt{`excited'} ($2.2254$), which outweighed the negative contribution of \texttt{`terrible'} ($-3.1951$). 
+    
+    In contrast, RoBERTa correctly identified the negative sentiment. Its architecture allows it to model the sequential structure of the sentence, recognizing that the initial excitement serves only to intensify the subsequent disappointment. To a transformer-based model, the later tokens effectively "gate" or modify the importance of the preceding ones—a capability NB lacks.
+
+    \item \textbf{Polysemy and Contextual Disambiguation:} 
+    NB struggles with polysemous words (words with multiple meanings). For example, the token \texttt{`stuffed'} ($-1.7135$) was associated with negative sentiment in the training data (e.g., ``stuffed nose'' or ``stuffed from overeating''). However, in the tweet ``why would they take a photo with stuffed animals?! that's pretty funny,'' \texttt{`stuffed'} is used neutrally to describe a toy. 
+    
+    RoBERTa’s self-attention mechanism allows it to disambiguate \texttt{`stuffed'} by attending to neighboring tokens like \texttt{`animals'} and \texttt{`photo'}. This confirms that while NB treats each token as an isolated feature, RoBERTa constructs a dynamic representation based on the specific semantic environment.
+
+    \item \textbf{Sensitivity to Sentence Length and Sparsity:} 
+    As a generative model that aggregates token-level probabilities, NB struggles with short sentences or those with sparse in-vocabulary features. In the case of the tweet ``Hahaha! Alright,'' the model predicted a neutral label despite the presence of positive tokens like \texttt{`hahaha'} ($1.0139$) and \texttt{`alright'} ($0.9255$). Because the cumulative sum of these contributions failed to cross the classification threshold, the model defaulted to neutral. This demonstrates that NB requires a higher "density" of evidence compared to RoBERTa, which can derive strong confidence from minimal but high-quality contextual cues.
+\end{enumerate}
+\section{Conclusion}
+
+In this project, we investigated tweet sentiment classification using Naive Bayes, RoBERTa, and LSTM models. Exploratory analysis showed that textual content was far more informative than the available metadata, leading us to focus on tweet-level preprocessing and modelling. Among the saved results, Naive Bayes achieved about 0.69 accuracy and 0.70 macro-F1 after threshold calibration, demonstrating that a simple model can remain competitive with strong preprocessing. Future work should complete the evaluation of the neural models and compare their gains against their additional computational cost.
+
 Our experiments suggest that preprocessing matters substantially for tweet sentiment classification, especially for simpler models. Handling negation, preserving sentiment-bearing tokens, and calibrating thresholds allowed Naive Bayes to reach a reasonably strong macro-F1 despite its simplicity. This shows that careful text normalization and representation can partially compensate for the limitations of bag-of-words models.
 
 At the same time, the architecture choices in the notebook reflect the expectation that neural models should perform better when contextual understanding is required. RoBERTa, in particular, should be more robust to contextual polarity shifts and compositional meaning. LSTM provides a useful middle ground, offering sequential modelling without the full computational cost of a transformer.
 
 One limitation of the present notebook is that the saved outputs are incomplete for the neural models. This makes it difficult to perform a full empirical comparison directly from the notebook snapshot alone. In the final report, the analysis should therefore distinguish clearly between implemented methods and fully verified numerical results.
-
-\section{Conclusion}
-
-In this project, we investigated tweet sentiment classification using Naive Bayes, RoBERTa, and LSTM models. Exploratory analysis showed that textual content was far more informative than the available metadata, leading us to focus on tweet-level preprocessing and modelling. Among the saved results, Naive Bayes achieved about 0.69 accuracy and 0.70 macro-F1 after threshold calibration, demonstrating that a simple model can remain competitive with strong preprocessing. Future work should complete the evaluation of the neural models and compare their gains against their additional computational cost.
-
 %%%%%
 
 
