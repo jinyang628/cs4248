@@ -151,6 +151,7 @@ Since this column was not provided in test set, we are unable to validate it and
 
 As our goal is to identify preprocessing steps that bridges the gap between Naive Bayes, we consider and begin with preprocessing and feature engineering that would most improve the performance of Naive Bayes.
 
+\subsection{Preprocessing}
 \begin{enumerate}
     \item \textbf{Removal of rows with critical missing values.} Rows with missing values in the ``text'' and ``sentiment'' columns are removed. It was manually observed that all the testing and training rows that are dropped are merely empty rows.
     \item \textbf{Lowercasing.} Converting tokens to lowercase reduces vocabulary sparsity. Although capitalization, especially all caps (e.g., ``I am SO happy''), can carry sentiment information, we found that the majority of capitalized tokens in the dataset were either at the beginning of sentences or were proper nouns, which are not strong indicators of sentiment. Therefore, we opted to lowercase all tokens to improve generalization and reduce noise.
@@ -159,16 +160,21 @@ As our goal is to identify preprocessing steps that bridges the gap between Naiv
     
     \item \textbf{Lemmatisation.} Lemmatisation reduces the vocabulary size and therefore improve the frequency estimation for rare forms. However, the morphological form may carry sentiment relevant signals and removing them might affect performance, especially if the dataset is big enough to give sufficiently high frequencies for rare forms. We evaluated the performance with and without lemmatisation, eventually deciding to keep the morphological forms as lemmatisation in fact resulted in accuracy drops. 
     \item \textbf{Stopword Removal.} Removing Stopwords reduces the vocabulary size but is widely known to risk performance as by removing critical words that are negative in nature (e.g `not', `should'nt'). Therefore, we curated a list of certain stopwords that are crucial and are not excluded during the removal process (e.g not, shouldn't etc). 
-    
-    \item \textbf{Translation of emoticons.} Emoticons are translated to their text equivalent ((e.g :( -> `sad face' and :) -> `happy face')) to prevent them from getting regarded as OOV (especially since they may be fragmented by tokenisation). This provides them more sentiment signal for improved performance.
-    \item \textbf{Negation tagging.} We explicitly model local negation scope by prefixing the next $N$ tokens with \texttt{NOT\_} after a negation trigger (e.g., \textit{not good at all} $\rightarrow$ \textit{NOT\_good NOT\_at NOT\_all} for $N{=}3$). This helps the model distinguish polarity reversals such as ``good'' versus ``not good''.
-    \item \textbf{Removal of expressive lengthening.} Expressive lengthening such as ``soooo'' could be replaced with ``soo'' to reduce the vocabulary space. The logic involves replacing repeated characters of more than length 2 with only 2 characters. Our experiments indicate that performance gains caused by a smaller vocabulary space did not outweigh the loss of sentiment information caused by the removal of expressive lengthening, indicating that the expressive lengthenings are meaningful indicators of sentiment.
-
-    \item \textbf{VADER Lexicon Dictionary}. VADER\citep{hutto-2014} sentiment lexicon are a pre computed sentiment scores from a curated dictionary of words that will provide a reliable prior of sentiment that the frequency estimate alone could not. This scores will be concatenated with the count vector of Naive Bayes to improve the signal for sentiment classification. 
-    
-    \item \textbf{GloVe}. Glove was used to initialise the embedding layer of the Bi-LSTM. GloVE provides a strong prior learned from a large external corpus. From our experiments, GloVe makes up about 40\% of the tokens in the dataset, therefore, while there is assistance from the prior, the embedding layer still largely relies on the randomly initialised representation. 
 \end{enumerate}
 
+\subsection{Feature Engineering}
+\begin{enumerate}
+    \item \textbf{Translation of emoticons.} Emoticons are translated to their text equivalent ((e.g :( -> `sad face' and :) -> `happy face')) to prevent them from getting regarded as OOV (especially since they may be fragmented by tokenisation). This provides them more sentiment signal for improved performance.
+    \item \textbf{Removal of expressive lengthening.} Expressive lengthening such as ``soooo'' could be replaced with ``soo'' to reduce the vocabulary space. The logic involves replacing repeated characters of more than length 2 with only 2 characters. Our experiments indicate that performance gains caused by a smaller vocabulary space did not outweigh the loss of sentiment information caused by the removal of expressive lengthening, indicating that the expressive lengthenings are meaningful indicators of sentiment.
+    \item \textbf{Injection of VADER Sentiment Token.} Valence Aware Dictionary and Entiment Reasoner (VADER)is a lexicon and rule based sentiment tool trained on social media text. Given a text, outputs a score from -1 to 1, to which we used to append a sentence level sentiment token `VADER\_POSITIVE', `VADER\_NEGATIVE' and `VADER\_NEUTRAL` at the end of the text if the score is \(\geq 0.05 \), \(\leq 0.05 \) or otherwise respectively. 
+    This partially proxies the large training corpus that RoBERTa and LSTM are trained on, by granting the model gains access to an external sentiment signal derived from a rich, human-validated lexicon.
+    \item \textbf{Injection of Fragmented VADER Sentiment Token.} While similar to the above, there is a first split of the text on clause boundaries (e.g `,`, `;', `but`) then apply VADER on each fragments to append tokens such as `FRAG1\_NEGATIVE' and `FRAG2\_NEUTRAl' to implied the sentiment of each segment. This better represenation of polarity shifts that Naive Bayes may miss as a result of the independence assumption it holds, that LSTM and RoBERTa does not face due to it ability to handle long ranges sequential data. 
+    \item \textbf{Negation Tagging.} How it helps bridge the gap: Naïve Bayes treats each token as conditionally independent, so "not good" is represented as two unrelated features, not effectively capturing the polarity shift down the sentence. This method addresses that by scanning tokens sequentially: when a negation word (e.g., not, never, no) is encountered, all subsequent tokens are prefixed with `NOT\_` until a punctuation mark or contrast word (e.g `but`, `however`, `although`) or when the `negation\_window' (if not 0) is reached. 
+    Additionally, a `CONTRAST\_SHIFT' token is added when a contrast word is added. The `NOT\_`' prefix creates a distinct vocabulary that encodes the negatation directly into the token, while the contrast shift token serves as a signal to the model of a polarity shift in the text.
+    \item \textbf{Injection Subject-Verb-Object.} One of the core advantages of RoBERTa and LSTMs is their ability to model relationships between non-adjacent tokens, which Naive Bayes does not have due to its independent assumption. Therefore, we attempt to proxy it by identifying and appending subject-verb-object tokens. spaCy's dependency parser is used to extract the ROOT verb along with its nominal subjects and objects/attributes, then a compact token such as `SVO\_i\_love\_movie` is appended to the text.
+    \item \textbf{Polarity Propagation.} Similar to relying on a quality and large external corpus, we manually crafted a sequential scoring pass over the preprocessed text (after negation tagging). It accumulates a signed polarity score by awarding \(\pm 2\) for positive/negative lexicon matches, flipping the sign on `NOT\_` prefixed tokens, halving the score at a `CONTRAST\_SHIFT`' boundary, and applying a 1.5x boost if any all-caps token was detected (a common intensity marker in informal text). The final score is discretized into `POLARITY\_STRONG\_POS`, `POLARITY\_STRONG\_NEG`, or `POLARITY\_NEUTRAL` and appended as a token. This also proxies the long-range dependencies issues Naive Bayes faces.
+    \item \textbf{Normalising Expressive Lengthening.} The normalisation of expressive lengthening (eg. gooood) is crucial as they carry strong sentiment signal, but are often discarded due to it being treated differently from its root word (good). Therefore, normalisation is essential to identify and preserve the token, moreover, it reduces the vocabulary size that will be unnecessarily large without normalisation.
+\end{enumerate}
 
 \section{Experiments}
 Naive Bayes will serve as our baseline model with all the preprocessing steps to push the limits of performance and interpretability. Ablations of the preprocessing steps and feature engineered is done after to identify methods that may not
@@ -179,7 +185,8 @@ The code and result can be found on our GitHub repository\footnote{\url{https://
 
 
 \subsection{Naive Bayes method}
-For the classical baseline, we trained a Multinomial Naive Bayes classifier. Text was vectorized using a count-based representation. We performed hyperparameter grid search using sklearn's RandomizedSearchCV and GridSearchCV functions over the vectorizer and model settings, including the n-gram range, minimum document frequency, vocabulary size, and smoothing parameter alpha. Starting from a wide range for each feature, We did randomized grid search a few times, and slowly zoomed in to test more precise values.
+We trained a baseline Multinomial Naive Bayes classifier with basic preprocessing such as lowercasing, removal of URLs, removal of numbers and translating emoticons. We performed a hyperparameter grid search over the vectorizer (TF-IDF or CBoW) and model settings, including the n-gram range, minimum document frequency, vocabulary size, and smoothing parameter alpha, to identify the best
+set of hyperparamters that we will used across the ablations test of incrementally adding the carefully designed preprocessing and engineered features, to ensure complexity and reduce complexity.
 
 The best-performing configuration and the test ranges used are presented in Table 1.
 
@@ -205,71 +212,130 @@ Unlike standard multiclass classification, our notebook maps sentiment labels to
 
 \subsection{Naive Bayes results}
 
-Using default sentiment thresholds of -0.33 and 0.33, the Naive Bayes model achieved an overall accuracy of 0.69 and a macro-F1 score of 0.69 on the test set. Class-wise results showed that positive tweets were the easiest to classify, while neutral tweets were more difficult.
+\begin{table}[h]
+\small
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{5.8cm} c c}
+\hline
+\textbf{Preprocessing} & \textbf{Accuracy} & \textbf{Macro F1} \\
+\hline
+Baseline & 0.66 & 0.66 \\
+\hline
++ Translate Emoticon               & 0.66 & 0.66 \\
++ Normalise Elongation             & 0.66 & 0.66 \\
++ SVO Triplets                     & 0.66 & 0.66 \\
++ Position Tagging                 & 0.66 & 0.66 \\
+\hline
++ VADER + Frag VADER               & 0.70 & 0.70 \\
++ Negation Scoping                 & 0.67 & 0.66 \\
++ Polarity Propagation             & 0.67 & 0.67 \\
++ Lemmatise                        & 0.67 & 0.66 \\
+\hline
+\textbf{+ VADER + Frag VADER}      &      & \\
+\textbf{+ Negation Scoping}        &      & \\
+\textbf{+ Polarity Propagation + Lemmatise} & \textbf{0.71} & \textbf{0.71} \\
+\hline
+\end{tabular}
+\caption{Naive Bayes Ablation Study}
+\label{tab:nb_ablation}
+\end{table}
 
-We additionally performed threshold calibration on the predicted sentiment scores to improve macro-F1. By tuning decision boundaries for negative and positive classes, we observed a small improvement in macro-F1, suggesting that the neutral class benefits from more flexible decision thresholds. This calibration slightly improved the balance across classes, particularly by increasing neutral-class recall, although overall accuracy remained around 0.69.
+The baseline Naive Bayes model, with the best set of hyperparameters, obtained an accuracy of 0.66 and Macro F1 score of 0.66, which is a decent classification model performing better than random guessing.
+The engineered features and preprocessing such as `Translate Emoticon` and Normalise Elongation did not improve the performance of the model.
+In contrast, the five engineered features and preprocessing, collectively contributed substantially to performance of the model. 
+This is suggest that VADER served as a meaningful substitute for the pre-trained semantic grounding that RoBERTa and LSTM (GloVe) has that NB cannot derive from co-occurrence counts alone. This produced the single largest individual gain of +0.04, confirming that the absence of external lexical knowledge is one of the most significant bottlenecks for NB on sentiment tasks.
+Negation scoping also contributed, serving as effective signals for the propagation of negation mitigating the independence assumption of Naive Bayes.
+Similarly, Polarity propagation, effectively approximate long range dependencies of text, accumulating the sentiment across the text and encoding it as a single token that served as an effective sentiment signal.
+Lastly, lemmatisation expectedly contributed to the performance by reducing inflected variants into the same word, reducing vocabulary sparsity and improving the reliability of the frequency estimates that NB depends on.
 
-Hyperparameter tuning further improved the accuracy from about 0.69 to 0.71, suggesting that the model is already highly optimised, and that the limitations come from the model architecture or the dataset.
-
-These results suggest that even a relatively simple bag-of-words model can perform competitively when supported by suitable preprocessing and decision-threshold tuning.
-
-In order to better interpret the results for Naive Bayes, we extract the tweets in the test set that were correctly classified by RoBERTa but misclassified by Naive Bayes, and perform a qualitative analysis to identify linguistic patterns that are difficult for Naive Bayes to capture.
-Since Naive Bayes operates on a bag-of-words representation, we are able to extract the score contribution of each token in the tweet to the final prediction, and explain why the model makes the wrong prediction. Results of this analysis is discussed in the Discussion section.
-
-\subsection{RoBERTa method}
-
-To compare against a pretrained transformer, we fine-tuned DistilRoBERTa on the sentiment dataset. Instead of directly treating the task as a 3-way classification problem, the notebook formulates it as regression over sentiment scores, where negative, neutral, and positive are mapped to -1, 0, and 1 respectively. The regression outputs are then converted back into class labels using thresholding.
-
-The model used a maximum sequence length of 64, batch size of 32, learning rate of 2e-5, weight decay of 0.01, and one training epoch. This design keeps training lightweight while still leveraging contextual representations learned from large-scale pretraining.
-
-Compared with Naive Bayes, RoBERTa is expected to better capture contextual sentiment cues, especially cases involving negation, composition, and longer dependencies that are difficult to represent with bag-of-words features alone.
-
+This suggest that by designing features and preprocessing around the limitations of Naive Bayes and strength of complex models like Bi-LSTM and RoBERTa, we can significantly improve the performance of a simple model.
 
 \subsection{LSTM method}
 
-We implement a Bidirectional Long Short-Term Memory (Bi-LSTM) classifier as an intermediate model that bridges the link from Naive Bayes to RoBERTa. The choice of choice of Bi-LSTM is motivated by two key limitations of Naive Bayes, 
+We implement a Bidirectional Long Short-Term Memory (Bi-LSTM) classifier as an intermediate model that bridges the link from Naive Bayes to RoBERTa. 
+The choice of choice of Bi-LSTM is motivated by two key limitations of Naive Bayes, 
 the bag-of-words independence assumption renders it unable to model word order or sequential context and it cannot capture long-range dependencies, which are critical for sentiment in compound and complex sentences.
 A Bi-LSTM processes the token sequence both left-to-right and right-to-left, learning contextual representations that encode the influence of surrounding tokens, and is therefore structurally better 
-suited to these phenomena, it also takes in certain preprocessing steps that helps it improve the performance while maintaining so interpretability.
+suited to these phenomena. The Bi-LSTM is trained with GloVe a pre trained embedding to 
 
-The Bi-LSTM is trained with GloVe a pre trained embedding and when through a grid search to identify the best set of hyperparamter. To reduce complexity and consistency, the best set of hyperparamter from the baseline of the Bi-LSTM is trained and subsequently used for all the following ablations to identify the contributions of certain pre-processing steps that were effective 
-on the Naive Bayes model but not as much the Bi-LSTM. The motivation of this model is to show how as the number of interpretbale feature decrreases adn better deep and complex representation of linguistic features, such as with the long range dependencies of the LSTM with its activation fucntion and with GloVe, the model starts performing better and that traditional preprocessing steps can become
-counter productive, affecting the performance of the model. The implication of this is that it shows how ... and as we can see the performance of RobERTa downstream is significantly superior by reinforcing the strenghts of LSTM and lesser of the strengths and contributions for traditonal model like NB. 
+We trained a baseline Bi-LSTM with basic preprocessing such as lowercasing, removal of URLs, removal of numbers and translating emoticons. 
+We performed a hyperparameter grid search over model parameters such as number of hidden dimension and number of layers to identify the best
+set of hyperparamters that we will used across the ablations test of incrementally testing if the preprocessing and engineered features that helped Naive Bayes remains useful for the Bi-LSTM.
+
+The best-performing configuration and the test ranges used are presented below.
 \begin{table}[h]
 \centering
 \begin{tabular}{lc}
 \hline
 \textbf{Hyperparameter} & \textbf{Value} \\
 \hline
-Embedding dimension & 100 \\
 Hidden dimension & [256] \\
-Dropout & 0.4  \\
-Batch size & 32 \\
+Dropout & 0.2  \\
+Batch size & 64 \\
 Number of layers & 1 \\
 Bidirectional & True \\
 \hline
 \end{tabular}
-\caption{Best-performing LSTM hyperparameters, Embedding dimension fixed at 100 to align with embedding dim of GloVe}
+\caption{Best-performing LSTM hyperparameters (Embedding dimension fixed at 100 to align with embedding dim of GloVe)}
 \end{table}
 
 \subsection{Bi-LSTM results}
 
-Using default sentiment thresholds of -0.33 and 0.33, the Naive Bayes model achieved an overall accuracy of 0.69 and a macro-F1 score of 0.69 on the test set. Class-wise results showed that positive tweets were the easiest to classify, while neutral tweets were more difficult.
+\begin{table}[h]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{4.5cm} c c}
+\hline
+\textbf{Preprocessing} & \textbf{Accuracy} & \textbf{Macro F1} \\
+\hline
+Baseline & 0.72 & 0.72 \\
+\hline
++ Lemmatise                 & 0.75 & 0.75 \\
+\hline
++ Lemmatise + VADER         &      & \\
+\quad + Frag VADER + Negation Scoping        &      & \\
+\quad + Polarity Propagation                 & 0.75 & 0.75 \\
+\hline
+\end{tabular}
+\caption{Bi-LSTM Ablation Study}
+\label{tab:lstm_ablation} 
+\end{table}
 
-We additionally performed threshold calibration on the predicted sentiment scores to improve macro-F1. By tuning decision boundaries for negative and positive classes, we observed a small improvement in macro-F1, suggesting that the neutral class benefits from more flexible decision thresholds. This calibration slightly improved the balance across classes, particularly by increasing neutral-class recall, although overall accuracy remained around 0.69.
-
-Hyperparameter tuning further improved the accuracy from about 0.69 to 0.71, suggesting that the model is already highly optimised, and that the limitations come from the model architecture or the dataset.
-
-These results suggest that even a relatively simple bag-of-words model can perform competitively when supported by suitable preprocessing and decision-threshold tuning.
-
+The Baseline Bi-LSTM without any of the engineered features and preprocessing that were beneficial to Naive Bayes already outperformed the best Naive Bayes.
+This showcase the superiority of a more complexed architecture and strong pre trained embeddings. Except for lemmatisation, the addition of the engineered features and preprocessing
+beneficial to Naive Bayes did not contribute to an improve in performance. This is largely expected since LSTM's sequential model could better represent negation and polarity shift than the engineered features.
+Lemmatisation significantly improved the model as without it, the vocabulary coverage by the GloVe embedding is around 40\%, but its introduction significantly increased coverage to around 73\%, further illustrating the value of a large scale pre training corpus on model performance.
+Overall, this suggest that the efforts of a carefully designed feature engineering and pre processing step, may generally be outweighted by a better model architecture and larger and higher quality pre train corpus.
 
 \section{RoBERTa method}
 
-To compare against a pretrained transformer, we fine-tuned DistilRoBERTa on the sentiment dataset. Instead of directly treating the task as a 3-way classification problem, the notebook formulates it as regression over sentiment scores, where negative, neutral, and positive are mapped to -1, 0, and 1 respectively. The regression outputs are then converted back into class labels using thresholding.
-
+We fine-tuned DistilRoBERTa to highlight the importance of a better model architecture and pre training corpus on its ability to better represent and identify sentiment, over the efforts to improve on the Bi-LSTM and Naive Bayes. 
+Instead of directly treating the task as a 3-way classification problem, the notebook formulates it as regression over sentiment scores, where negative, neutral, and positive are mapped to -1, 0, and 1 respectively. 
+The regression outputs are then converted back into class labels using thresholding.
+Basic preprocessing such as lowercasing, removal of URLs, removal of numbers and translating emoticons, were applied.
 The model used a maximum sequence length of 64, batch size of 32, learning rate of 2e-5, weight decay of 0.01, and one training epoch. This design keeps training lightweight while still leveraging contextual representations learned from large-scale pretraining.
+\subsection{RoBERTa results}
 
-Compared with Naive Bayes, RoBERTa is expected to better capture contextual sentiment cues, especially cases involving negation, composition, and longer dependencies that are difficult to represent with bag-of-words features alone.
+\begin{table}[h]
+\centering
+\caption{RoBERTa Ablation Study}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{3cm} c c} 
+\hline
+\textbf{Preprocessing} & \textbf{Accuracy} & \textbf{Macro F1} \\
+\hline
+RoBERTa  & 0.78 & 0.78 \\
+RoBERTa + Lemmatise        & 0.78 & 0.78 \\
+\hline
+\end{tabular}
+\label{tab:roberta_ablation}
+\end{table}
+
+
+The baseline fine tuned RoBERTa model outperformed Bi-LSTM considerable and Naive Bayes significantly without any engineered features and preprocessing. This further highlights how a stronger model architecture (Transformers vs LSTM) and better pre training model (BERT vs GloVE) can make
+engineered features and preprocessing less effective, making it difficult for a simple model to bridge the complexity gap with meticulous feature engineering and preprocessing. 
 
 \section{Discussion}
 
