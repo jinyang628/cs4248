@@ -31,7 +31,7 @@
 %
 % and set <dim> to something 5cm or larger.
 
-\title{Can Preprocessing Close the Gap? A Study of Naive Bayes vs. RoBERTa for Tweet Sentiment Classification}
+\title{Can Preprocessing and Hyperparameter Tuning Close the Gap? A Study of Different Models for Tweet Sentiment Classification}
 
 % Author information can be set in various styles:
 % For several authors from the same institution:
@@ -57,11 +57,14 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-This document is a template for the NUS CS4248 Natural Language Processing group project final report, which is limited to eight A4-sized pages for the main report body. This document contains the best practices for the group project final report, a marking rubric (\S\ref{s:best}) and formatting instructions for the report (\S\ref{s:format}).  It also includes a list of frequently asked questions about CS4248 projects, included as Appendix B. 
-The document itself conforms to its own specifications, and is therefore an example of what your report should look like.  
+Sentiment classification in social media is complicated by informal language, negation, and contextual ambiguity. 
+While modern Transformer-based models define the state-of-the-art (SOTA), classical algorithms like Naive Bayes (NB) remain relevant due to their computational efficiency and interpretability. 
+This paper investigates the extent to which meticulous preprocessing, feature engineering, and hyperparameter tuning can compensate for the structural limitations of the Bag-of-Words (BoW) assumption. 
+We implement an empirical progression starting with a highly optimized Multinomial Naive Bayes pipeline—incorporating negation tagging, emoticon translation, and VADER lexicon integration—achieving a competitive accuracy of 71% and a macro-F1 of 0.70.
 
-You can (and should) access the live version of this file through the URL below:
-\url{https://soc-n.us/cs4248-t2520-final-report-template}.  This version you're reading is version 250219 (19 Feb 2025).
+We then evaluate these same features within a Bidirectional LSTM (Bi-LSTM) and a fine-tuned RoBERTa model to identify at what point manual feature engineering becomes redundant or counterproductive due to superior representation learning. 
+A qualitative error analysis reveals that while NB performs robustly on high-density sentiment tokens, it consistently fails in cases of sentiment inversion, polysemy, and spurious neutral correlations—areas where RoBERTa`s self-attention mechanism excels. 
+Our results suggest that while careful normalization significantly closes the performance gap in simpler datasets, architectural context-awareness remains indispensable for capturing the special nuances found in tweets.
 \end{abstract}
 
 \section{Introduction}
@@ -326,7 +329,7 @@ This document has been adapted from the ACL Rolling Review Template (ACL ARR) by
 
 \noindent 1A. Declaration of Original Work. By entering our Student IDs below, we certify that we completed our assignment independently of all others (except where sanctioned during in-class sessions), obeying the class policy outlined in the introductory lecture. In particular, we are allowed to discuss the problems and solutions in this assignment, but have waited at least 30 minutes by doing other activities unrelated to class before attempting to complete or modify our answers as per the class policy. \\
 During coding, LLM models such as Gemini 3.1 Pro and GPT-5.3-Codex were used for code generation, debugging, and optimization. This was done with either the chat feature with tools such as Github Copilot, or with the autocomplete feature in code editors such as Visual Studio Code.
-LLMs such as Gemini 3 were also used in the process of writing the report with regards to concept clarification and language/formatting improvement. A snippet of the conversation can be found at \url{https://gemini.google.com/share/63c0ce5b60f4}. 
+LLMs such as Gemini 3 were also used in the process of writing the report with regards to concept clarification and language/formatting improvement. Snippets of the conversation can be found at \url{https://gemini.google.com/share/63c0ce5b60f4} and \url{https://gemini.google.com/share/7abf536f3366}. 
 \noindent Signed, 
 [A0251997L, e0957585@u.nus.edu],
 [A0252459X, e0958047@u.nus.edu],
