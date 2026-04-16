@@ -186,9 +186,9 @@ The best-performing configuration and the test ranges used are presented in Tabl
 \hline
 \textbf{Hyperparameter} & \textbf{Value} & \textbf{Test Range} \\
 \hline
-Max Features & 6500 & 1000-30000 \\
+Max Features & 4000 & 1000-30000 \\
 N-gram Range & (1,2) & (x,y); $x,y \in $ [1,5] \\
-Minimum df & 1 & 1-5 \\
+Minimum df & 4 & 1-5 \\
 Alpha & 1.0 & 0.1-1.0\\
 Vectorizer & Count & Count, TF-IDF \\
 \hline
@@ -269,6 +269,16 @@ The model used a maximum sequence length of 64, batch size of 32, learning rate 
 Compared with Naive Bayes, RoBERTa is expected to better capture contextual sentiment cues, especially cases involving negation, composition, and longer dependencies that are difficult to represent with bag-of-words features alone.
 
 \section{Discussion}
+
+\subsection{Result Analysis: Naive Bayes Hyperparameter Tuning}
+
+n-gram range: From doing random search, we found out that as long as the model does not take into account unigrams (i.e. a range starting with 1), the model will not perform as well. In our sample of 50 random searches, the best performing model that did not test unigrams had an F1 of 0.56, while the worst performing model that included unigrams had an F1 of 0.63, suggesting the significance of testing unigrams. Intuitively, this is true because many standalone words like 'love' and 'hate' offer strong sentiment signals, that cannot be captured as well if only bigrams and longer were considered. In addition, the best performing model suggests that an ngram range of (1,2) is more than enough to detect the sentiment in the text, suggesting that the sentiment is largely made up of single words and short phrases (e.g. not good).
+
+Negation Window: From testing, whether the window used was 3, 4, or 5 words long, made absolutely no difference to the performance of the model. This suggests the lack of long-range negation dependencies in the text. As such, the final model just used a 3-length negation window to simplify computation.
+
+Alpha: No matter the test done: `alpha=1.0` was always the best, suggesting a Laplace Smoothing is the best way to go.
+
+Max features: I learnt that 4000 features is the ideal amount, with a noticeable drop in F1 score in either direction. This suggests that the text corpus is not too complicated, with there being only about 4000 unique words.
 
 \subsection{Result Analysis: Naive Bayes vs. RoBERTa}
 
