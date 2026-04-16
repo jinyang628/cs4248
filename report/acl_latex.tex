@@ -122,7 +122,7 @@ From these industry projects, we thus have hope that we can simply push Naive Ba
 The dataset consists of tweet texts labelled with one of three sentiment classes: negative, neutral, or positive. 
 The raw training set contains 27,481 rows and the raw test set contains 4,815 rows. 
 After removing rows with missing values in critical fields such as text and sentiment, 1 row was dropped from the training set and 1,281 rows were dropped from the test set, leaving 27,480 training rows and 3,534 test rows. 
-The distribution of sentiment in the training dataset is as follows
+The distribution of sentiment in the training dataset is as follows.
 \begin{table}[!ht]
 \centering
 \begin{tabular}{lcr}
@@ -134,31 +134,30 @@ Neutral & 11,117 \\
 Positive & 8,582 \\
 \hline
 \end{tabular}
-\caption{Best-performing Naive Bayes hyperparameters}
+\caption{Distribution of sentiment labels in the training dataset}
 \end{table}
 As the distribution of sentiment seems to be rather balanced with no significant minority, we chose not to apply class-balancing techniques as oversampling and undersampling incur their own tradeoffs.
 
 In addition to tweet text, the dataset includes metadata such as country, age group, time of tweet, population, land area, and density. 
 However, our exploratory analysis suggested that these metadata features highlighted that sentiment distribution were largely balanced across these categories, hence are weak predictors of sentiment. 
-Therefore, we chose to drop these auxiliary variables and focus primarily on the tweet text itself rather than 
+Therefore, we chose to drop these auxiliary variables and focus primarily on the tweet text itself. Furthermore, the inclusion of these variables would have made the interpretability of the models more difficult, as it would be less clear how these features interact with the text features to influence sentiment predictions.
 
 A `selected\_text' column, which is a subset of the value present in `text' was provided in the train datatset and not the test dataset.
 While the process of deriving and purpose of `selected\_text' is not explicitly documented in the dataset, we inferred that it represents the most relevant part of the tweet that led to the assignment of the sentiment label of the text. 
 Since this column was not provided in test set, we are unable to validate it and hence excluded from training and testing purposes.
 
-As our goal is to identify preprocessing steps that bridges the gap between Naive Bayes, we consider and begin with preprocessing and feature engineering that would greatly address the limitation, improve interpretabilty 
-and performance of Naive Bayes, that will be less beneficial and counter productive for advanced models like Bi-LSTM followed by RoBERTa.
+As our goal is to identify preprocessing steps that bridges the gap between Naive Bayes, we consider and begin with preprocessing and feature engineering that would most improve the performance of Naive Bayes.
 
 \begin{enumerate}
     \item \textbf{Removal of rows with critical missing values.} Rows with missing values in the ``text'' and ``sentiment'' columns are removed. It was manually observed that all the testing and training rows that are dropped are merely empty rows.
-    \item \textbf{Lowercasing.} Converting tokens to lowercase reduces vocabulary sparsity. However, since all caps tokens (e.g GOOD) may serve as a potential signal, we ...
+    \item \textbf{Lowercasing.} Converting tokens to lowercase reduces vocabulary sparsity. Although capitalization, especially all caps (e.g., ``I am SO happy''), can carry sentiment information, we found that the majority of capitalized tokens in the dataset were either at the beginning of sentences or were proper nouns, which are not strong indicators of sentiment. Therefore, we opted to lowercase all tokens to improve generalization and reduce noise.
     \item \textbf{Removal of URLs.} URLs are removed as they are not informative for sentiment classification and introduces noise into the feature space.
     \item \textbf{Removal of numbers.} Numeric tokens are removed because they rarely carry stable sentiment signals in the corpus and can introduce noise into bag-of-words features (e.g., for the sentence ``I earned 100 dollars after a day's work'', it is uncertain whether 100 is a large enough number for this sentence to be positive or negative). 
     
-    \item \textbf{Lemmatisation.} Lemmatisation, reduces the vocabulary size and my improve the frequency estimation for rare forms. However, the morphological form may carry sentiment relevant signals and removing them might affect performance. Therefore, we conducted experiments to evaluate its contribution.
-    \item \textbf{Stopword Removal.} Removing Stopwords, reduces the vocabulary size but is widely known to risk performance as by removing critical words that are negative in nature (e.g `not', `should'nt'). Therefore, we curated a list of certain stopwords that are crucial and are not excluded during the removal process (e.g not, shouldn't etc). Ultimately, we evaluate its contribution.
+    \item \textbf{Lemmatisation.} Lemmatisation reduces the vocabulary size and therefore improve the frequency estimation for rare forms. However, the morphological form may carry sentiment relevant signals and removing them might affect performance, especially if the dataset is big enough to give sufficiently high frequencies for rare forms. We evaluated the performance with and without lemmatisation, eventually deciding to keep the morphological forms as lemmatisation in fact resulted in accuracy drops. 
+    \item \textbf{Stopword Removal.} Removing Stopwords reduces the vocabulary size but is widely known to risk performance as by removing critical words that are negative in nature (e.g `not', `should'nt'). Therefore, we curated a list of certain stopwords that are crucial and are not excluded during the removal process (e.g not, shouldn't etc). 
     
-    \item \textbf{Translation of emoticons.} Emoticons are translated to their text equivalent ((e.g :( -> `sad face' and :) -> `happy face')) to prevent it from getting regarded as OOV (especially since it might be fragmented by tokenisation). This provides it more sentiment signal for improved performance.
+    \item \textbf{Translation of emoticons.} Emoticons are translated to their text equivalent ((e.g :( -> `sad face' and :) -> `happy face')) to prevent them from getting regarded as OOV (especially since they may be fragmented by tokenisation). This provides them more sentiment signal for improved performance.
     \item \textbf{Negation tagging.} We explicitly model local negation scope by prefixing the next $N$ tokens with \texttt{NOT\_} after a negation trigger (e.g., \textit{not good at all} $\rightarrow$ \textit{NOT\_good NOT\_at NOT\_all} for $N{=}3$). This helps the model distinguish polarity reversals such as ``good'' versus ``not good''.
     \item \textbf{Removal of expressive lengthening.} Expressive lengthening such as ``soooo'' could be replaced with ``soo'' to reduce the vocabulary space. The logic involves replacing repeated characters of more than length 2 with only 2 characters. Our experiments indicate that performance gains caused by a smaller vocabulary space did not outweigh the loss of sentiment information caused by the removal of expressive lengthening, indicating that the expressive lengthenings are meaningful indicators of sentiment.
 
