@@ -49,10 +49,10 @@
 %         Author 2 \\ Address line \\ ... \\ Address line \And
 %         Author 3 \\ Address line \\ ... \\ Address line}
 
-\author{A0251997L, A02345678Y, A0252829W, A0252459X \\
+\author{A0251997L, A0252459X, A0257425B, A0252829W, A0252183J \\
   Group 28 \\
   Mentored by Esther Gan \\
-  \texttt{\{e0968397,e0958047,e0957771,e0957585,e0958417\}@u.nus.edu}}
+  \texttt{\{e0957585,e0958047,e0968397,e0958417,e0957771\}@u.nus.edu}}
 
 \begin{document}
 \maketitle
@@ -172,6 +172,7 @@ Naive Bayes will serve as our baseline model with all the preprocessing steps to
 be as useful for Naive Bayes and plausible rationales. Then Bi-LSTM will be applied with the preprocessing steps and feature engineering that served the Naive Bayes model well to evaluate whether the contribution to the model is counterproductive. 
 For feature engineered and preprocessing steps that were counterproductive, we will attempt to identify the rationale and highlight the relationship between explicit preprocessing and feature engineering with better model architecture and better representation learning.
 We finally contrast it with RoBERTa, to showcase what the upper limit of the SOTA can achieve as well as whether certain preprocessing and engineered feature that may have served the Bi-LSTM well does not contribute as much to RoBERTa along with the ratonale.
+The code and result can be found on our GitHub repository\footnote{\url{https://github.com/jinyang628/cs4248}}.
 
 
 \subsection{Naive Bayes method}
@@ -285,7 +286,7 @@ By analyzing the log-likelihood contributions of individual tokens in instances 
     \item \textbf{Polysemy and Contextual Disambiguation:} 
     NB struggles with polysemous words (words with multiple meanings). For example, the token \texttt{`stuffed'} ($-1.7135$) was associated with negative sentiment in the training data (e.g., ``stuffed nose'' or ``stuffed from overeating''). However, in the tweet ``why would they take a photo with stuffed animals?! that's pretty funny,'' \texttt{`stuffed'} is used neutrally to describe a toy. 
     
-    RoBERTa’s self-attention mechanism allows it to disambiguate \texttt{`stuffed'} by attending to neighboring tokens like \texttt{`animals'} and \texttt{`photo'}. This confirms that while NB treats each token as an isolated feature, RoBERTa constructs a dynamic representation based on the specific semantic environment.
+    RoBERTa`s self-attention mechanism allows it to disambiguate \texttt{`stuffed'} by attending to neighboring tokens like \texttt{`animals'} and \texttt{`photo'}. This confirms that while NB treats each token as an isolated feature, RoBERTa constructs a dynamic representation based on the specific semantic environment.
 
     \item \textbf{Sensitivity to Sentence Length and Sparsity:} 
     As a generative model that aggregates token-level probabilities, NB struggles with short sentences or those with sparse in-vocabulary features. In the case of the tweet ``Hahaha! Alright,'' the model predicted a neutral label despite the presence of positive tokens like \texttt{`hahaha'} ($1.0139$) and \texttt{`alright'} ($0.9255$). Because the cumulative sum of these contributions failed to cross the classification threshold, the model defaulted to neutral. This demonstrates that NB requires a higher "density" of evidence compared to RoBERTa, which can derive strong confidence from minimal but high-quality contextual cues.
@@ -592,117 +593,20 @@ Use \verb|\appendix| before any appendix section to switch the section numbering
 \bibliographystyle{acl_natbib}
 
 \section*{Acknowledgements}
+We would like to thank our professors Min-Yen Kan and Christian Von Der Weth, as well as our supervisor Esther Gan for their continued support and guidance throughout the project.
 
-Place any acknowledgements here.  You can thank any people you contacted or sources that you used that are not bibliographic in nature.
-
-This document has been adapted from the ACL Rolling Review Template (ACL ARR) by Min-Yen Kan.  You may find the original template, which NUS has also contributed to in the past, here: \url{https://www.overleaf.com/latex/templates/acl-rolling-review-template/jxbhdzhmcpdm}.  We have omitted much of the original document to cut down on verbiage.
-
-Our final report grading rubric is based on a merger of guidelines from component courses CS5228 Knowledge Discovery and Data Mining and CS3244 Machine Learning.
+This document has been adapted from the ACL Rolling Review Template (ACL ARR) by Min-Yen Kan.  You may find the original template, which NUS has also contributed to in the past, here: \url{https://www.overleaf.com/latex/templates/acl-rolling-review-template/jxbhdzhmcpdm}.
 
 \section*{Statement of Independent Work}
 
-{\it You {\bf must} include the text of the two statements below in your group's submitted work.  Digitally sign your submission using your Student Numbers (starting with A...; N.B., not your NUSNET email identifier). This is a required section and is not part of the main body (doesn't count towards your page limit).} \\
-
 \noindent 1A. Declaration of Original Work. By entering our Student IDs below, we certify that we completed our assignment independently of all others (except where sanctioned during in-class sessions), obeying the class policy outlined in the introductory lecture. In particular, we are allowed to discuss the problems and solutions in this assignment, but have waited at least 30 minutes by doing other activities unrelated to class before attempting to complete or modify our answers as per the class policy. \\
-
-To be explicitly clear, AI use is allowed and encouraged for all assignments in CS4248.  We have documented our use of AI tools (if applicable) in a following table, as suggested in the NUS AI Tools policy\footnote{\url{https://libguides.nus.edu.sg/new2nus/acadintegrity}, tab ``AI Tools: Guidelines on Use in Academic Work''}.  This particular document did not use any AI Tools to proofcheck and was constructed and edited purely by manual work.\\
-
-If the production of your report used AI Tools (inclusive of Generative AI), do keep detailed logs of how you used AI Tools, as your project requires the accountability of an audit trail of your interaction(s) with such tools (prompts, output).\\ 
-
-\noindent 1B. Exception to the Class Policy. We did not follow the CS4248 Class Policy in doing this assignment. This text explains why and how we believe we should be assessed for this assignment given the circumstances explained. \\
-
-\noindent Signed, [Enter your Axxx Student IDs and NUSNET email addresses here]
-
-\section*{Ethical Statement}
-
-The optional ethical statement is an unnumbered section that comes after the references.  Most projects may not need to include such a statement, but we include it here, as it is important to be aware that NLP research and experimentation needs to be conducted in an ethically acceptable manner.  
-
-It describes any pertinent issues with respect to the NL technology being described in the project work.  These could include dual-use, data quality discussions, compute requirements, fair pay for annotators and evaluators, among other factors.  
-
-You may read more about these issues by reading the {\it Guidelines for Responsible NLP Research}\footnote{\url{https://aclrollingreview.org/responsibleNLPresearch/}} 
-and consulting works on the ACL Ethics Reading List\footnote{\url{https://github.com/acl-org/ethics-reading-list}}.
-
-\appendix
-
-\section{Example Appendix}
-\label{sec:appendix}
-
-Optional appendices are the last item in the report.
-
-If your group's report is too long, working to best structure the core of the report (instead of technical details) in the main body and relegating details for replication in appropriate appendices is key.  
-
-Since you have unlimited pages for appendices, you can afford to make any plots or result tables larger in the appendices, but do ensure that key results are in the report's main page limit rather than relegated here.
-
-\section{Project Frequently Asked Questions (FAQ)}
-
-{\it This section is sourced from the CS3244 Machine Learning module's Project FAQ.}
-
-\small
-
-\begin{enumerate}
-    \item {\it Q: Just to be sure, for our project work, can we code in any language (i.e. R) other than python? } \\
-    A: Yes. 
-    
-    \item {\it Q: Does the project difficulty matters for the grading, e.g. taking the {\tt easy} dataset versus doing something tagged as {\tt hard}?  Would we be graded based on the novelty or ``importance'' of the use case/problem our group comes up with?} \\ 
-    A: We aren't looking at technical complexity when grading the project. We state the notional technical difficulty of project dataset to help your team decide which type of project to take on.  More difficult datasets usually involve more specific  preprocessing, data normalization and usually (much) larger compute costs in manipulating large-scale data.
-    \begin{itemize}
-        \item What we are looking at is the learning that comes out of engaging in the project. We want to see you twist your mind and come up with interesting approaches to the problem of choice.
-        \item We also do not place heavy emphasis on metrics like accuracy, log loss, precision, recall, etc.. We'd care more about questions like ``why did you use XYZ Metric over ABC Metric for this problem?''. Getting a +0.5 accuracy boost doesn't matter as much as why you chose to do ABC Technique that brought about that accuracy boost in the first place.  \item We care more about how you communicate your findings to us in an interesting way like your analysis, your wins, your losses (pun not intended), etc.. That way, it shows us that you gained valuable experience from this project that you can apply to future projects.
-        \item You are allowed to explore models not covered in class at your own discretion. We only teach you the fundamentals in hopes of making you comfortable with the math/concepts involved. Beyond that, you can look at more complex models and techniques not taught in CS4248 for your projects. But again, complexity is not the focus, communication and understanding the 2W1H (why, what, how) are.
-        \item There isn't any true ``novelty'' in these projects {\it per se}. They are popular benchmarks found in the real world with increasing difficulty of use. We want you to have your own unique spin to these solutions (please do not copy-paste/plagiarise someone else's code from online) and present them in a way you and we (i.e. the teaching staff) understand.  
-    \end{itemize}
-    These projects are for you in the long run, not us. Hope this helps.
-
-    %\item {\it Q: What local compute do we have access to for our projects?}\\
-    %A: Please take note that our class' reservation for compute nodes in SoC has now taken effect (from 26 Jan until 15 Apr).  If your groups find it useful, you may start using it if you have previously registered an SoC UNIX ID. The nodes you may work with are {\tt xgpf0--6} (i.e., use the command {\tt ssh xgpf0.comp.nus.edu.sg} within SoC's network to reach the first of seven available servers).  You may use other nodes but these compute resources are exclusively for our class' use.  If you use these resources, please self-regulate and use a maximum of one (1) node per group.  It is unfair if one group hogs all of the resources and makes the resources unavailable to others.  Please be respectful and mindful that your group is one of many in our cohort and all groups should be able to utilize some of these resources.
-
-    % \item {\it Q: If there are more than one idle node remaining, is it fair for a group to use more than one node to speed up their training and free up the resources sooner for the others?} \\
-    % A: In general you might try to use {\tt nice} or other commands to change the priority of your jobs.  But in the case of GPUs they are either utilized or not and such job priority scheduling doesn't work.   If you can carefully monitor the GPUs utilization and ensure there are at least 1--2 other machines in the 6 machines in the {\tt xgfp0--6} cluster that are free, we are fine with a group using more than one.  But you should not schedule very long jobs that hog group resources.
-
-    \item {\it Q. Have any advice for experimentation?}\\
-    A: Sure. We recommend staging your experiments' time to execute to fit your working style.  For example, we recommend having 3 granularities of time for your experiment execution: immediate (finishes within 1--3 minutes), coffee/tea break (finishes within 30-60 mins), overnight (as the name implies).  Based on some initial runs, you should develop a good estimation for how long your pipeline takes for a certain data scale, and retrofit/sample data from your dataset to fit accordingly.
-
-    {\bf Immediate} experiments should just to check that your code works with a tiny toy dataset without faults and to assess whether an experimental setting can be escalated to the next granularity.  
-
-    {\bf Coffee / Tea Break} experiments test those runs from the Immediate scale that reach your standard for trying on a larger dataset.  These experiments can be set to run on a server with a medium-sized dataset that can complete independently while you are eating a meal, or taking a break to do other work or play.  These validate your ideas on larger scale datasets without committing to training an entire dataset without knowing whether the results point appropriately in the proper direction – Min has seen many times that the "math works out  (e.g., shape of matrices are fine) but which the computation is garbage (e.g., one off indexing errors) – so this scale mitigates this.  These scale experiments need to be followed up with analysis to ensure that the results are as expected and appropriate.
-
-    {\bf Overnight} (or longer) experimentation runs your training or testing at scale, for production or for final presentations or reports.  Try not to do this scale of experimentation without having a good reason to believe it will succeed (i.e., don't run a large-scale experiment to try something out; you should have done that at the Coffee / Tea Break scale instead).
-
-    \item {\it Q: Is model performance and using and getting state-of-the-art performance an important output of our project?}\\
-    A: Generally, no.  Good projects explain and teach, rather than just show good results.  It is better to use simpler models where you can show that your understanding of the model, features, corpus and evaluation metrics interact to lead to the performance levels you observe.  Merely swapping in a newer more advanced model and getting better results doesn't merit this understanding.  Good and replicable results are nice-to-have in terms of grading criteria, but not must-haves.
-
-    \item {\it Q: Just want to check if our group’s understanding of an ablation study is correct.  If we have around 20 features that we engineered and a baseline model of previously proposed features, how do we efficiently conduct an ablation study?  We are thinking of grouping the 20 features we have into a few groups to turn them on/off for the study. Is this the correct way? Should our angle start out from all features included to removing parts of it, or start from the baseline model and add features, since it's an ``ablation'' study.} \\
-    A: Yes, that would be appropriate. You can turn off a feature group, or some pre-/post- processing and see what the effects are. Before you do that, your team should hypothesize what you think would happen. This can help you hone your sense of understanding. A scientist does experimentation with a hypothesis in mind.  Generally you have a final model and you turn off certain features to study their (negative) impact on your final model. This allows you to argue for the necessity of all feature groups in your model.
-
-    \item {\it Q: I have some questions regarding the ablation studies we need to do for the project.  Based on my understanding, the aim of ablation studies is to understand how our existing system (i.e. the feature engineering techniques+the models) work.  And I remember you saying that it is about having hypothesis and finding ways to test them. 
-    So my first question is, do we have to have some form of "removal" to conduct ablation analysis? Or is it ok to analyse without ``removal''?}\\
-    A: Yes that's correct.  No you need not (always) do a removal (ablation) for analysis. It is just a common form. Both additive and ablative (removal) studies of feature classes are common.  Ablation studies often form the basis for arguing that the model cannot have any of its elements removed without damaging a performance metric.
-
-    \item {\it Q: If the aim is to understand how our existing system works, how do we control the factors of the experiment? For example, if feature engineering technique A works well with a model, and we wanna know what is in A that makes this succeed, so we modify technique A into its variant C (with one feature removed), and then here's the question:  do we feed the input processed using C into the model trained using A and see the change of results, or do we train a new model of the same structure on this input processed using C and then compare the results with inputs processed by A feeding into model trained using A?}\\
-    A: Yes, sometimes we refer to C as ``C: Model A–<some feature>''. The second method, train a new model.  We compare the performance macroscopically (whole dataset, e.g., accuracy, $F_1$) against the system trained with the output from A.
-
-    \item {\it Q: It was mentioned at the start of the sem that there was no real novelty in our projects, but there was novelty of project in the project presentation rubrics. Could you please clarify what novelty in the marking rubric truly stands for?.}\\
-    A: Indeed with many of our curated datasets, there has been much (informally) published past work.  You should find, read and cite any past work in your pre-recorded presentation and add these links to the supplemental materials you prepare, so that the instruction staff can check accordingly. You should validate (by replication) performance figures from other papers or posts. You do original work by going beyond what others have reported.  There are many ways you can go beyond the past work in your analyses and subsequent iterative questioning and answering of your project work.  Don't concentrate just on performance metrics but look for ways to connect what you've learned in lecture with your project.
-
-    Examples include:
-    \begin{itemize}
-        \item How do changes in your model architecture affect performance?  Not just at the macro performance metrics but for individual (micro) and groups (meso) problem instances?
-        \item How does changing some input instances minimally change the results for better or worse?
-        \item Which features or model paradigm designs contribute the most towards performance and, more crucially, why?
-        \item Why do certain models do better at certain instances and not for others?
-    \end{itemize}
-    
-\end{enumerate}
-
-\section{Version History}
-
-Note: This list is in reverse chronological order.  Timestamps follow the {\it yymmdd} format.
-\begin{enumerate}
-    \item 250219 --- Updated to explicitly cite AI tool use and to outdate information about reserved instances in the SoC cluster.
-    \item 240229 --- Updated to as for audit trail regarding AI Tools Use (around Lines 480--485 in the PDF). 
-    \item 230312 --- Updated for Canvas and AI Tools policy.
-    \item 220324 --- Updated report length and data analysis sections.
-    \item 220320 --- Initial distribution.
-\end{enumerate}
+During coding, LLM models such as Gemini 3.1 Pro and GPT-5.3-Codex were used for code generation, debugging, and optimization. This was done with either the chat feature with tools such as Github Copilot, or with the autocomplete feature in code editors such as Visual Studio Code.
+LLMs such as Gemini 3 were also used in the process of writing the report with regards to concept clarification and language/formatting improvement. A snippet of the conversation can be found at \url{https://gemini.google.com/share/63c0ce5b60f4}. 
+\noindent Signed, 
+[A0251997L, e0957585@u.nus.edu],
+[A0252459X, e0958047@u.nus.edu],
+[A0257425B, e0968397@u.nus.edu],
+[A0252829W, e0958417@u.nus.edu],
+[A0252183J, e0957771@u.nus.edu]
 
 \end{document}
