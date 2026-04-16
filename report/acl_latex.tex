@@ -609,4 +609,33 @@ LLMs such as Gemini 3 were also used in the process of writing the report with r
 [A0252829W, e0958417@u.nus.edu],
 [A0252183J, e0957771@u.nus.edu]
 
+\appendix
+
+\section{Hyperparameter Tuning Data for Naive Bayes}
+The results of the tuning for Naive Bayes can be found at \url{https://drive.google.com/file/d/1iOQ9JErCyhzH8Y9KnnDg0HTNA0mGL559/view?usp=sharing}.
+
+In each file, results can be interpreted as follows:
+
+\begin{itemize}
+\item \texttt{model\_type:} Type of model, NB = Naive Bayes
+\item \texttt{model\_\_alpha:} Smoothing parameter for the Naive Bayes model (1.0 indicates Laplace smoothing)
+\item \texttt{preprocessor\_\_lemmatise:} Boolean indicating if words were reduced to their dictionary base form
+\item \texttt{preprocessor\_\_lowercase:} Boolean indicating if all text was converted to lowercase
+\item \texttt{preprocessor\_\_negation\_scoping:} Boolean indicating if the model identifies words affected by ``not" or other negations
+\item \texttt{preprocessor\_\_negation\_window:} The number of words following a negation term that are marked as negated
+\item \texttt{preprocessor\_\_normalize\_expressive
+\_lengthening:} Boolean indicating if repeated characters (e.g., ``loooove") were truncated
+\item \texttt{preprocessor\_\_remove\_emoticon:} Boolean indicating if emoticons were deleted from the text
+\item \texttt{preprocessor\_\_remove\_number:} Boolean indicating if numeric digits were removed
+\item \texttt{preprocessor\_\_remove
+\_stopword:} Boolean indicating if common filler words (e.g., ``the", ``is") were removed
+\item \texttt{preprocessor\_\_remove\_url:} Boolean indicating if web links were stripped from the data
+\item \texttt{preprocessor\_\_translate
+\_emoticon:} Boolean indicating if emoticons were converted into text descriptions
+\item \texttt{vectorizer\_\_max\_features:} The maximum number of top words/phrases kept based on frequency
+\item \texttt{vectorizer\_\_min\_df:} The minimum document frequency required for a term to be included
+\item \texttt{vectorizer\_\_ngram\_range:} Length of n-grams used in vectorization, as a range of (min\_n, max\_n)
+\item \texttt{vectorizer\_\_vectorizer\_type:} The method of feature extraction, in this case, a Count Vectorizer
+\item \texttt{mean\_macro\_f1:} The average F1 score across all classes, treating all classes equally regardless of frequency
+\end{itemize}
 \end{document}
